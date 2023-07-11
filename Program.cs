@@ -1,7 +1,16 @@
+using Microsoft.EntityFrameworkCore;
+using Silerium.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
+    builder.Configuration.GetConnectionString("Default")
+    ));
+
+builder.Services.AddLogging(logger => logger.AddConsole());
 
 var app = builder.Build();
 
