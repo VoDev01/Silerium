@@ -10,7 +10,7 @@ namespace Silerium.Data
         public ApplicationDbContext(string connectionString) : base(GetOptions(connectionString))
         { }
         public DbSet<Category> Categories { get; set; }
-        public DbSet<ProductsCategory> ProductCategories { get; set; }
+        public DbSet<Subcategory> Subcategories { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductSpecification> ProductSpecification { get; set; }
