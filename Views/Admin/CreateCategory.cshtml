@@ -1,0 +1,40 @@
+﻿@model Silerium.Models.Category
+
+@{
+    ViewData["Title"] = "Создание категории";
+}
+<div class="mx-3">
+    <h1>Новая категория</h1>
+    <hr />
+    <div class="row flex-column">
+        <div class="col-md-4">
+            <form asp-action="CreateCategory">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="Name" class="control-label mb-2">Название</label>
+                    <input asp-for="Name" class="form-control mb-2" />
+                    <span asp-validation-for="Name" class="text-danger mb-2"></span>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Создать" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
+        <div class="col-md-4 mb-2">
+           <h4>Подкатегории</h4>
+            @if (Model.Subcategories != null)
+            {
+                foreach (var subCategory in Model.Subcategories)
+                {
+                    <a asp-action="EditSubcategory" asp-controller="Admin" class="mb-2 text-decoration-none">@subCategory.Name</a>
+                }
+            }
+        </div>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-secondary">К админ панели</a>
+    </div>
+</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

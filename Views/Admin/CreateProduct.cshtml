@@ -1,0 +1,62 @@
+﻿@model Silerium.ViewModels.ProductViewModel
+
+@{
+    ViewData["Title"] = "Создание товара";
+}
+
+<div class="mx-3">
+    <h1>Создание нового товара</h1>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="CreateProduct">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="Product.Name" class="control-label">Название товара</label>
+                    <input asp-for="Product.Name" class="form-control" />
+                    <span asp-validation-for="Product.Name" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Product.Description" class="control-label">Описание товара</label>
+                    <input asp-for="Product.Description" class="form-control" />
+                    <span asp-validation-for="Product.Description" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Product.StockAmount" class="control-label">Количество товара на складе</label>
+                    <input asp-for="Product.StockAmount" class="form-control" />
+                    <span asp-validation-for="Product.StockAmount" class="text-danger"></span>
+                </div>
+                <div class="form-group form-check">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="Product.Available" /> @Html.DisplayName("Готов к продаже")
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="product_subcategory">Подкатегория</label>
+                    <select name="product_subcategory" id="product_subcategory">
+                        @foreach(var subcategory in Model.Subcategories)
+                        {
+                            <option value="@subcategory.Id">@subcategory.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <h4>Технические характеристики</h4>
+                </div>
+                <div class="form-group">
+                    <h4>Фото товара</h4>
+                    
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Create" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-secondary">К админ панели</a>
+    </div>
+</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
