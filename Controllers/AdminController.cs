@@ -4,6 +4,7 @@ using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
 using Silerium.Models.Repositories;
+using Silerium.ViewModels;
 
 namespace Silerium.Controllers
 {
@@ -243,6 +244,39 @@ namespace Silerium.Controllers
                 IProduct products = new ProductRepository(db);
                 List<Product> productsList = products.GetAllWithInclude(p => p.Subcategory).ToList();
                 return View(productsList);
+            }
+        }
+        // GET: AdminController/Create
+        public IActionResult CreateProduct()
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                ISubcategory subcategories = new SubcategoryRepository(db);
+                ProductViewModel productViewModel = new ProductViewModel();
+                productViewModel.Product = new Product();
+                productViewModel.Subcategories = subcategories.GetAll().ToList();
+                return View(productViewModel);
+            }
+        }
+
+        // POST: AdminController/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CreateProduct(ProductViewModel productViewModel)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IProduct products = new ProductRepository(db);
+                    products.Create(productViewModel.Product);
+                    products.Save();
+                    return RedirectToAction("Index", "Admin");
+                }
+            }
+            catch
+            {
+                return View();
             }
         }
     }

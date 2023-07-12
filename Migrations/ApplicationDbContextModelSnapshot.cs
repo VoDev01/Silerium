@@ -63,7 +63,7 @@ namespace Silerium.Migrations
                     b.Property<DateTime>("OrderDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
-                        .HasDefaultValue(new DateTime(2023, 7, 11, 18, 40, 57, 947, DateTimeKind.Local).AddTicks(3453));
+                        .HasDefaultValue(new DateTime(2023, 7, 12, 15, 9, 8, 711, DateTimeKind.Local).AddTicks(1494));
 
                     b.HasKey("UserId", "ProductId");
 
@@ -91,6 +91,9 @@ namespace Silerium.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("PriceRub")
+                        .HasColumnType("int");
 
                     b.Property<int>("StockAmount")
                         .HasColumnType("int");
@@ -286,7 +289,7 @@ namespace Silerium.Migrations
             modelBuilder.Entity("Silerium.Models.Subcategory", b =>
                 {
                     b.HasOne("Silerium.Models.Category", "Category")
-                        .WithMany("SubCategories")
+                        .WithMany("Subcategories")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -296,7 +299,7 @@ namespace Silerium.Migrations
 
             modelBuilder.Entity("Silerium.Models.Category", b =>
                 {
-                    b.Navigation("SubCategories");
+                    b.Navigation("Subcategories");
                 });
 
             modelBuilder.Entity("Silerium.Models.Product", b =>

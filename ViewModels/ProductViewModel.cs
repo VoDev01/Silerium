@@ -6,5 +6,6 @@ namespace Silerium.ViewModels
     {
         public Product Product { get; set; }
         public IEnumerable<Subcategory> Subcategories { get; set; }
+        public IEnumerable<IFormFile> FormImages { get; set; } 
     }
 }
