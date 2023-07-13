@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Создание товара";
+    Layout = "_AdminPanelLayout";
 }
 
 <div class="mx-3">
@@ -57,10 +58,10 @@
                         <tbody>
                             <tr>
                                 <td>
-                                    <input type="text" id="spec_name0" name="spec_name0" class="form-control"/>
+                                    <input type="text" id="spec_name0" name="spec_name0" class="form-control" required/>
                                 </td>
                                 <td>
-                                    <input type="text" id="spec_val0" name="spec_val0" class="form-control" />
+                                    <input type="text" id="spec_val0" name="spec_val0" class="form-control" required/>
                                 </td>
                             </tr>
                         </tbody>
@@ -75,11 +76,10 @@
                 </div>
                 <div class="form-group mb-3">
                     <label for="form_images">Фото товара</label>
-                    <input type="file" class="form-control" asp-for="FormImages" id="form_images" />
+                    <input type="file" class="form-control" asp-for="FormImages" id="form_images" multiple />
                 </div>
                 <div class="form-group">
                     <input type="submit" value="Создать" class="btn btn-primary" />
-                    <a asp-action="Index" class="btn btn-secondary">К админ панели</a>
                 </div>
                 <input type="hidden" class="row-count" value="0"/>
             </form>

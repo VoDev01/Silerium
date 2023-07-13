@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Silerium.Controllers;
 using Silerium.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
     ));
 
 builder.Services.AddLogging(logger => logger.AddConsole());
+builder.Services.AddSingleton<Logger<AdminController>>();
 
 var app = builder.Build();
 

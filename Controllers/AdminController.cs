@@ -11,14 +11,15 @@ namespace Silerium.Controllers
     public class AdminController : Controller
     {
         private string connectionString;
-
-        public AdminController()
+        private ILogger<AdminController> logger;
+        public AdminController(ILogger<AdminController> logger)
         {
             IConfiguration configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json")
                 .Build();
             connectionString = configuration.GetConnectionString("Default");
+            this.logger = logger;
         }
 
         // GET: AdminController
@@ -58,8 +59,9 @@ namespace Silerium.Controllers
                     return RedirectToAction("Index", "Admin");
                 }
             }
-            catch
+            catch (Exception e)
             {
+                logger.LogError(e.Message);
                 return View();
             }
         }
@@ -91,8 +93,9 @@ namespace Silerium.Controllers
                     return RedirectToAction("Index", "Admin");
                 }
             }
-            catch
+            catch (Exception e)
             {
+                logger.LogError(e.Message);
                 return View();
             }
         }
@@ -130,8 +133,9 @@ namespace Silerium.Controllers
                     return RedirectToAction("Index", "Admin");
                 }
             }
-            catch
+            catch (Exception e)
             {
+                logger.LogError(e.Message);
                 return View();
             }
         }
@@ -139,35 +143,44 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                ICategory categories = new CategoryRepository(db);
-                List<Category> categoriesList = categories.GetAllWithInclude(c => c.Subcategories).ToList();
-                return View(categoriesList);
+                ISubcategory subcategories = new SubcategoryRepository(db);
+                List<Subcategory> subcategoriesList = subcategories.GetAllWithInclude(c => c.Category).ToList();
+                return View(subcategoriesList);
             }
         }
 
         // GET: AdminController/Create
-        public IActionResult CreateSubcategory()
+        public IActionResult CreateSubcategory(int id)
         {
-            return View(new Subcategory());
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                ICategory categories = new CategoryRepository(db);
+                Category category = categories.GetByID(id-1);
+                return View(new Subcategory { Category = category});
+            }
         }
 
         // POST: AdminController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateSubcategory(Subcategory subcategory)
+        public IActionResult CreateSubcategory(Subcategory subcategory, int categoryid)
         {
             try
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
-                    ISubcategory categories = new SubcategoryRepository(db);
-                    categories.Create(subcategory);
-                    categories.Save();
+                    ISubcategory subcategories = new SubcategoryRepository(db);
+                    ICategory categories = new CategoryRepository(db);
+                    Category category = categories.GetByID(categoryid - 1);
+                    subcategory.Category = category;
+                    subcategories.Create(subcategory);
+                    subcategories.Save();
                     return RedirectToAction("Index", "Admin");
                 }
             }
-            catch
+            catch (Exception e)
             {
+                logger.LogError(e.Message);
                 return View();
             }
         }
@@ -199,9 +212,10 @@ namespace Silerium.Controllers
                     return RedirectToAction("Index", "Admin");
                 }
             }
-            catch
+            catch(Exception e) 
             {
-                return View();
+                logger.LogError(e.Message); 
+                return View(); 
             }
         }
 
@@ -232,8 +246,9 @@ namespace Silerium.Controllers
                     return RedirectToAction("Index", "Admin");
                 }
             }
-            catch
+            catch(Exception e)
             {
+                logger.LogError(e.Message);
                 return View();
             }
         }
@@ -262,20 +277,37 @@ namespace Silerium.Controllers
         // POST: AdminController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateProduct(ProductViewModel productViewModel)
+        public IActionResult CreateProduct(ProductViewModel productViewModel, int product_subcategory)
         {
             try
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     IProduct products = new ProductRepository(db);
+                    ISubcategory subcategories = new SubcategoryRepository(db);
+                    foreach (var formImage in productViewModel.FormImages)
+                    {
+                        byte[] imageData;
+                        using (var fstream = new BinaryReader(formImage.OpenReadStream()))
+                        {
+                            imageData = fstream.ReadBytes((int)formImage.Length);
+                        }
+                        productViewModel.Product.Images.Add(new ProductImage { Image = imageData });
+                    }
+                    List<ProductSpecification> specifications = new List<ProductSpecification>();
+                    foreach (var specification in HttpContext.Request.Query.Where(q => q.Key.Contains("spec_name")))
+                    {
+                        specifications.Add(new ProductSpecification { Name = specification.Key, Specification = specification.Value });
+                    }
+                    productViewModel.Product.Subcategory = subcategories.GetByID(product_subcategory - 1);
                     products.Create(productViewModel.Product);
                     products.Save();
                     return RedirectToAction("Index", "Admin");
                 }
             }
-            catch
+            catch (Exception e)
             {
+                logger.LogError(e.Message);
                 return View();
             }
         }

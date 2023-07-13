@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Silerium.Models
 {
@@ -15,8 +16,8 @@ namespace Silerium.Models
         public int StockAmount { get; set; }
         public bool Available { get; set; }
         public Subcategory Subcategory { get; set; }
-        public IEnumerable<ProductSpecification> Specifications { get; set; }
-        public IEnumerable<ProductImage> Images { get; set; }
+        public List<ProductSpecification> Specifications { get; set; } = new List<ProductSpecification>();
+        public List<ProductImage> Images { get; set; } = new List<ProductImage>();
         public IEnumerable<User> Users { get; set; }
         public IEnumerable<Order> Orders { get; set; }
     }

@@ -37,7 +37,7 @@ namespace Silerium.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("Silerium.Models.Order", b =>
@@ -105,7 +105,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("SubcategoryId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("Silerium.Models.ProductImage", b =>
@@ -127,7 +127,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImages");
+                    b.ToTable("ProductImages", (string)null);
                 });
 
             modelBuilder.Entity("Silerium.Models.ProductSpecification", b =>
@@ -155,7 +155,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductSpecification");
+                    b.ToTable("ProductSpecification", (string)null);
                 });
 
             modelBuilder.Entity("Silerium.Models.Subcategory", b =>
@@ -178,7 +178,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Subcategories");
+                    b.ToTable("Subcategories", (string)null);
                 });
 
             modelBuilder.Entity("Silerium.Models.User", b =>
@@ -231,7 +231,7 @@ namespace Silerium.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Silerium.Models.Order", b =>

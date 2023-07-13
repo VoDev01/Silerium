@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Удаление категории";
+    Layout = "_AdminPanelLayout";
 }
 
 <h1>Удаление категории</h1>
@@ -38,6 +39,5 @@
     <form asp-action="DeleteCategory">
         <input type="hidden" asp-for="Id" />
         <input type="submit" value="Удалить" class="btn btn-danger" />
-        <a asp-action="Index" class="btn btn-secondary">К админ панели</a>
     </form>
 </div>

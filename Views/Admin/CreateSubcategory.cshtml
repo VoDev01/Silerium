@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Создание подкатегории";
+    Layout = "_AdminPanelLayout";
 }
 
 <div class="mx-3">
@@ -15,6 +16,7 @@
                     <label asp-for="Name" class="control-label mb-2">Название</label>
                     <input asp-for="Name" class="form-control mb-2" />
                     <span asp-validation-for="Name" class="text-danger mb-2"></span>
+                    <input name="categoryid" value="@Model.Category.Id" hidden />
                 </div>
                 <div class="form-group">
                     <input type="submit" value="Создать" class="btn btn-primary" />
@@ -23,14 +25,11 @@
         </div>
         <div class="col-md-4 mb-2">
             <h4>Категория</h4>
-            @if (Model.Category != null)
+            @if (Model != null)
             {
                 <a asp-action="EditCategory" asp-controller="Admin" class="mb-2 text-decoration-none">@Model.Category.Name</a>
             }
         </div>
-    </div>
-    <div>
-        <a asp-action="Index" class="btn btn-secondary">К админ панели</a>
     </div>
 </div>
 
