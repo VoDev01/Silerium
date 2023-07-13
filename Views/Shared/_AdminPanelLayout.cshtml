@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Silerium</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/SileriumDirectory.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index" style="font-size: 28px;">Silerium</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container-fluid g-0">
+        <main role="main" class="pb-3">
+
+            <div class="row panel">
+                <div class="toolbar col-md-3">
+                    <h2 class="text-center">Админ панель</h2>
+                    <ul class="nav flex-column">
+                        <li class="nav-item mb-2">
+                            <a class="nav-link d-block text-start" asp-action="Categories" asp-controller="Admin">Категории</a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link d-block text-start" asp-action="Subcategories" asp-controller="Admin">Подкатегории</a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link d-block text-start" asp-action="Products" asp-controller="Admin">Товары</a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link d-block text-start" asp-action="LoggedInUsers" asp-controller="Admin">Зарегистрированные пользователи</a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link d-block text-start" asp-action="GuestUsers" asp-controller="Admin">Незарегистрированные пользователи</a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link d-block text-start" asp-action="DataTables" asp-controller="Admin">Таблицы данных</a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link d-block text-start" asp-action="Logout" asp-controller="Admin">Выйти</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-9">
+                    @RenderBody()
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="border-top footer">
+        <div class="container">
+            &copy; 2023 - Silerium
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
