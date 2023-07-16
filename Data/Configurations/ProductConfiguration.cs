@@ -22,7 +22,6 @@ namespace Silerium.Data.Configurations
                     .HasForeignKey(o => o.ProductId),
                     o =>
                     {
-                        o.Property(o => o.OrderDate).HasDefaultValue(DateTime.Now);
                         o.Property(o => o.OrderAmount).HasDefaultValue(1);
                         o.Property(o => o.OrderAddress).HasDefaultValue("г.Караганда ул.Пушкина д.Колотушкина 105");
                         o.HasKey(o => new { o.UserId, o.ProductId });

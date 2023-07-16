@@ -32,33 +32,33 @@
         <main role="main" class="pb-3">
 
             <div class="row panel">
-                <div class="toolbar col-md-3">
+                <div class="toolbar col col-md-3">
                     <h2 class="text-center">Админ панель</h2>
                     <ul class="nav flex-column">
                         <li class="nav-item mb-2">
-                            <a class="nav-link d-block text-start" asp-action="Categories" asp-controller="Admin">Категории</a>
+                            <a class="nav-link d-block" asp-action="Categories" asp-controller="Admin">Категории</a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a class="nav-link d-block text-start" asp-action="Subcategories" asp-controller="Admin">Подкатегории</a>
+                            <a class="nav-link d-block" asp-action="Subcategories" asp-controller="Admin">Подкатегории</a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a class="nav-link d-block text-start" asp-action="Products" asp-controller="Admin">Товары</a>
+                            <a class="nav-link d-block" asp-action="Products" asp-controller="Admin">Товары</a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a class="nav-link d-block text-start" asp-action="LoggedInUsers" asp-controller="Admin">Зарегистрированные пользователи</a>
+                            <a class="nav-link d-block" asp-action="LoggedInUsers" asp-controller="Admin">Зарегистрированные пользователи</a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a class="nav-link d-block text-start" asp-action="GuestUsers" asp-controller="Admin">Незарегистрированные пользователи</a>
+                            <a class="nav-link d-block" asp-action="GuestUsers" asp-controller="Admin">Незарегистрированные пользователи</a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a class="nav-link d-block text-start" asp-action="DataTables" asp-controller="Admin">Таблицы данных</a>
+                            <a class="nav-link d-block" asp-action="DataTables" asp-controller="Admin">Таблицы данных</a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a class="nav-link d-block text-start" asp-action="Logout" asp-controller="Admin">Выйти</a>
+                            <a class="nav-link d-block" asp-action="Logout" asp-controller="Admin">Выйти</a>
                         </li>
                     </ul>
                 </div>
-                <div class="col-md-9">
+                <div class="col col-md-9">
                     @RenderBody()
                 </div>
             </div>

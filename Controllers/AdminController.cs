@@ -32,7 +32,7 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                ICategory categories = new CategoryRepository(db);
+                ICategories categories = new CategoriesRepository(db);
                 List<Category> categoriesList = categories.GetAllWithInclude(c => c.Subcategories).ToList();
                 return View(categoriesList);
             }
@@ -41,22 +41,28 @@ namespace Silerium.Controllers
         // GET: AdminController/Create
         public IActionResult CreateCategory()
         {
-            return View(new Category());
+            return View(new CategoryViewModel());
         }
 
         // POST: AdminController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateCategory(Category category)
+        public IActionResult CreateCategory(CategoryViewModel categoryVM)
         {
             try
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
-                    ICategory categories = new CategoryRepository(db);
-                    categories.Create(category);
+                    ICategories categories = new CategoriesRepository(db);
+                    using(var stream = new BinaryReader(categoryVM.FormImage.OpenReadStream()))
+                    {
+                        byte[] imageData;
+                        imageData = stream.ReadBytes((int)categoryVM.FormImage.Length);
+                        categoryVM.Category.Image = imageData;
+                    }
+                    categories.Create(categoryVM.Category);
                     categories.Save();
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Categories", "Admin");
                 }
             }
             catch (Exception e)
@@ -71,26 +77,34 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                ICategory categories = new CategoryRepository(db);
+                ICategories categories = new CategoriesRepository(db);
                 Category category = categories.GetByID(id-1);
-                return View(category);
+                CategoryViewModel categoryVM = new CategoryViewModel();
+                categoryVM.Category = category;
+                return View(categoryVM);
             }
         }
 
         // POST: AdminController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult EditCategory(Category category)
+        public IActionResult EditCategory(CategoryViewModel categoryVM)
         {
             try
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
-                    ICategory categories = new CategoryRepository(db);
-                    Category categoryDB = categories.GetByID(category.Id-1);
-                    categoryDB = category;
+                    ICategories categories = new CategoriesRepository(db);
+                    Category category = categories.GetByID(categoryVM.Category.Id-1);
+                    using (var stream = new BinaryReader(categoryVM.FormImage.OpenReadStream()))
+                    {
+                        byte[] imageData;
+                        imageData = stream.ReadBytes((int)categoryVM.FormImage.Length);
+                        category.Image = imageData;
+                    }
+                    category = categoryVM.Category;
                     categories.Save();
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Categories", "Admin");
                 }
             }
             catch (Exception e)
@@ -105,7 +119,7 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                ICategory categories = new CategoryRepository(db);
+                ICategories categories = new CategoriesRepository(db);
                 IEnumerable<Category> _categories = categories.GetAllWithInclude(c => c.Subcategories);
                 Category category = _categories.ElementAt(id-1);
                 return View(category);
@@ -121,16 +135,11 @@ namespace Silerium.Controllers
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
-                    ICategory categories = new CategoryRepository(db);
-                    ISubcategory subcategories = new SubcategoryRepository(db);
-                    foreach(var subcategory in categories.GetByID(category.Id-1).Subcategories)
-                    {
-                        subcategories.Delete(subcategory);
-                    }
-                    subcategories.Save();
+                    ICategories categories = new CategoriesRepository(db);
+                    ISubcategories subcategories = new SubcategoriesRepository(db);
                     categories.Delete(category);
                     categories.Save();
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Categories", "Admin");
                 }
             }
             catch (Exception e)
@@ -143,39 +152,47 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                ISubcategory subcategories = new SubcategoryRepository(db);
+                ISubcategories subcategories = new SubcategoriesRepository(db);
                 List<Subcategory> subcategoriesList = subcategories.GetAllWithInclude(c => c.Category).ToList();
                 return View(subcategoriesList);
             }
         }
 
         // GET: AdminController/Create
-        public IActionResult CreateSubcategory(int id)
+        public IActionResult CreateSubcategory()
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                ICategory categories = new CategoryRepository(db);
-                Category category = categories.GetByID(id-1);
-                return View(new Subcategory { Category = category});
+                ICategories categories = new CategoriesRepository(db);
+                return View(new SubcategoryViewModel { Subcategory = new Subcategory(), Categories = categories.GetAll().ToList()});
             }
         }
 
         // POST: AdminController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateSubcategory(Subcategory subcategory, int categoryid)
+        public IActionResult CreateSubcategory(SubcategoryViewModel subcategoryVM, int categoryid)
         {
             try
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
-                    ISubcategory subcategories = new SubcategoryRepository(db);
-                    ICategory categories = new CategoryRepository(db);
+                    ISubcategories subcategories = new SubcategoriesRepository(db);
+                    ICategories categories = new CategoriesRepository(db);
                     Category category = categories.GetByID(categoryid - 1);
-                    subcategory.Category = category;
-                    subcategories.Create(subcategory);
+
+                    subcategoryVM.Subcategory.Category = category;
+
+                    using(var stream = new BinaryReader(subcategoryVM.FormImage.OpenReadStream()))
+                    {
+                        byte[] imageData;
+                        imageData = stream.ReadBytes((int)subcategoryVM.FormImage.Length);
+                        subcategoryVM.Subcategory.Image = imageData;
+                    }
+
+                    subcategories.Create(subcategoryVM.Subcategory);
                     subcategories.Save();
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Subcategories", "Admin");
                 }
             }
             catch (Exception e)
@@ -190,26 +207,32 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                ISubcategory subcategories = new SubcategoryRepository(db);
-                Subcategory subcategory = subcategories.GetByID(id - 1);
-                return View(subcategory);
+                ISubcategories subcategories = new SubcategoriesRepository(db);
+                SubcategoryViewModel subcategoryVM = new SubcategoryViewModel { Subcategory = subcategories.GetByID(id - 1) };
+                return View(subcategoryVM);
             }
         }
 
         // POST: AdminController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult EditSubcategory(Subcategory subcategory)
+        public IActionResult EditSubcategory(SubcategoryViewModel subcategoryVM)
         {
             try
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
-                    ISubcategory subcategories = new SubcategoryRepository(db);
-                    Subcategory categoryDB = subcategories.GetByID(subcategory.Id - 1);
-                    categoryDB = subcategory;
+                    ISubcategories subcategories = new SubcategoriesRepository(db);
+                    Subcategory subcategory = subcategories.GetByID(subcategoryVM.Subcategory.Id - 1);
+                    using (var stream = new BinaryReader(subcategoryVM.FormImage.OpenReadStream()))
+                    {
+                        byte[] imageData;
+                        imageData = stream.ReadBytes((int)subcategoryVM.FormImage.Length);
+                        subcategory.Image = imageData;
+                    }
+                    subcategory = subcategoryVM.Subcategory;
                     subcategories.Save();
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Subcategories", "Admin");
                 }
             }
             catch(Exception e) 
@@ -224,7 +247,7 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                ISubcategory subcategories = new SubcategoryRepository(db);
+                ISubcategories subcategories = new SubcategoriesRepository(db);
                 IEnumerable<Subcategory> _subcategories = subcategories.GetAllWithInclude(sc => sc.Category);
                 Subcategory subcategory = _subcategories.ElementAt(id - 1);
                 return View(subcategory);
@@ -240,10 +263,10 @@ namespace Silerium.Controllers
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
-                    ISubcategory subcategories = new SubcategoryRepository(db);
+                    ISubcategories subcategories = new SubcategoriesRepository(db);
                     subcategories.Delete(subcategory);
                     subcategories.Save();
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Subcategories", "Admin");
                 }
             }
             catch(Exception e)
@@ -256,7 +279,7 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                IProduct products = new ProductRepository(db);
+                IProducts products = new ProductsRepository(db);
                 List<Product> productsList = products.GetAllWithInclude(p => p.Subcategory).ToList();
                 return View(productsList);
             }
@@ -266,7 +289,7 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                ISubcategory subcategories = new SubcategoryRepository(db);
+                ISubcategories subcategories = new SubcategoriesRepository(db);
                 ProductViewModel productViewModel = new ProductViewModel();
                 productViewModel.Product = new Product();
                 productViewModel.Subcategories = subcategories.GetAll().ToList();
@@ -283,14 +306,14 @@ namespace Silerium.Controllers
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
-                    IProduct products = new ProductRepository(db);
-                    ISubcategory subcategories = new SubcategoryRepository(db);
+                    IProducts products = new ProductsRepository(db);
+                    ISubcategories subcategories = new SubcategoriesRepository(db);
                     foreach (var formImage in productViewModel.FormImages)
                     {
                         byte[] imageData;
-                        using (var fstream = new BinaryReader(formImage.OpenReadStream()))
+                        using (var stream = new BinaryReader(formImage.OpenReadStream()))
                         {
-                            imageData = fstream.ReadBytes((int)formImage.Length);
+                            imageData = stream.ReadBytes((int)formImage.Length);
                         }
                         productViewModel.Product.Images.Add(new ProductImage { Image = imageData });
                     }
@@ -302,7 +325,7 @@ namespace Silerium.Controllers
                     productViewModel.Product.Subcategory = subcategories.GetByID(product_subcategory - 1);
                     products.Create(productViewModel.Product);
                     products.Save();
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Products", "Admin");
                 }
             }
             catch (Exception e)

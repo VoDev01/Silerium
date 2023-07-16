@@ -9,6 +9,8 @@ namespace Silerium.Models
         [MaxLength(100)]
         [Required]
         public string Name { get; set; }
+        public string PageName { get; set; }
+        public byte[] Image { get; set; }
         public IEnumerable<Subcategory> Subcategories { get; set; }
     }
 }

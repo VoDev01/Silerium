@@ -36,7 +36,9 @@
                         {
                             @foreach (var subCategory in item.Subcategories)
                             {
-                                <a asp-action="EditSubCategory" asp-route-id="@subCategory.Id">@Html.DisplayFor(modelItem => subCategory.Name)</a>
+                                <a class="text-decoration-none text-black" asp-action="EditSubCategory" asp-route-id="@subCategory.Id">
+                                    @Html.DisplayFor(modelItem => subCategory.Name)
+                                </a>
                             }
                         }
                     </td>

@@ -1,5 +1,19 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<Silerium.Models.Category>
+
 @{
+    ViewData["Title"] = "Категории";
 }
+<div class="mx-auto">
+    <h1>Категории</h1>
+    <div class="row">
+        @foreach (var category in Model)
+        {
+            <div class="col col-sm-12 col-md-6 col-xl-4">
+                <img class="category-image" src="data:image/jpg;base64,@Convert.ToBase64String(category.Image)" alt="@category.Name">
+                <a class="text-decoration-none d-block" asp-action="@category.PageName" asp-controller="Categories">
+                    @category.Name
+                </a>
+            </div>
+        }
+    </div>
+</div>

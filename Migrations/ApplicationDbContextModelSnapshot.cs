@@ -30,14 +30,22 @@ namespace Silerium.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<byte[]>("Image")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("PageName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("Silerium.Models.Order", b =>
@@ -61,9 +69,7 @@ namespace Silerium.Migrations
                         .HasDefaultValue(1);
 
                     b.Property<DateTime>("OrderDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValue(new DateTime(2023, 7, 12, 15, 9, 8, 711, DateTimeKind.Local).AddTicks(1494));
+                        .HasColumnType("date");
 
                     b.HasKey("UserId", "ProductId");
 
@@ -105,7 +111,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("SubcategoryId");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("Silerium.Models.ProductImage", b =>
@@ -127,7 +133,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImages", (string)null);
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("Silerium.Models.ProductSpecification", b =>
@@ -155,7 +161,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductSpecification", (string)null);
+                    b.ToTable("ProductSpecification");
                 });
 
             modelBuilder.Entity("Silerium.Models.Subcategory", b =>
@@ -169,6 +175,10 @@ namespace Silerium.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("Image")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -178,7 +188,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Subcategories", (string)null);
+                    b.ToTable("Subcategories");
                 });
 
             modelBuilder.Entity("Silerium.Models.User", b =>
@@ -231,7 +241,7 @@ namespace Silerium.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Silerium.Models.Order", b =>
