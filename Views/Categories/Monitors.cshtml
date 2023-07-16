@@ -1,0 +1,16 @@
+﻿@model Silerium.Models.Category
+
+@{
+    ViewData["Title"] = "Мониторы и ТВ";
+}
+
+<h1>Мониторы и ТВ</h1>
+<div class="row">
+    @foreach (var subcategory in Model.Subcategories)
+    {
+        <div class="col col-sm-12 col-md-6 col-xl-4">
+        <img class="subcategory-image" src="data:image/jpg;base64,@Convert.ToBase64String(subcategory.Image)" alt="@subcategory.Name">
+            <a class="text-decoration-none" asp-action="List" asp-controller="Products" asp-route-subcategory="@subcategory.Name.ToLower()">@subcategory.Name</a>
+        </div>
+    }
+</div>
