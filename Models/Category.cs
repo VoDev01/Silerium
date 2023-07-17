@@ -10,7 +10,7 @@ namespace Silerium.Models
         [Required]
         public string Name { get; set; }
         public string PageName { get; set; }
-        public byte[] Image { get; set; }
+        public string? Image { get; set; }
         public IEnumerable<Subcategory> Subcategories { get; set; }
     }
 }

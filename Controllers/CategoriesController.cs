@@ -31,7 +31,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 ICategories categories = new CategoriesRepository(db);
-                return View(categories.GetAllWithInclude(c => c.PageName == "Hardware").ToList().FirstOrDefault());
+                return View(categories.GetAllWithInclude(c => c.PageName == "Hardware").FirstOrDefault());
             }
         }
         public IActionResult Laptops()
@@ -39,7 +39,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 ICategories categories = new CategoriesRepository(db);
-                return View(categories.GetAllWithInclude(c => c.PageName == "Laptops").ToList().FirstOrDefault());
+                return View(categories.GetAllWithInclude(c => c.PageName == "Laptops").FirstOrDefault());
             }
         }
         public IActionResult Smartphones()
@@ -47,7 +47,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 ICategories categories = new CategoriesRepository(db);
-                return View(categories.GetAllWithInclude(c => c.PageName == "Smartphones").ToList().FirstOrDefault());
+                return View(categories.GetAllWithInclude(c => c.PageName == "Smartphones").FirstOrDefault());
             }
         }
         public IActionResult Monitors()
@@ -55,7 +55,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 ICategories categories = new CategoriesRepository(db);
-                return View(categories.GetAllWithInclude(c => c.PageName == "Monitors").ToList().FirstOrDefault());
+                return View(categories.GetAllWithInclude(c => c.PageName == "Monitors").FirstOrDefault());
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
@@ -54,11 +53,14 @@ namespace Silerium.Controllers
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     ICategories categories = new CategoriesRepository(db);
-                    using(var stream = new BinaryReader(categoryVM.FormImage.OpenReadStream()))
+                    using (var fstream = System.IO.File.Create(
+                        Path.Combine(
+                            Directory.GetCurrentDirectory(), 
+                            "/wwwroot/images/categories/", 
+                            $"category_{categoryVM.Category.Id}.jpg"
+                            )))
                     {
-                        byte[] imageData;
-                        imageData = stream.ReadBytes((int)categoryVM.FormImage.Length);
-                        categoryVM.Category.Image = imageData;
+                        categoryVM.Category.Image = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
                     }
                     categories.Create(categoryVM.Category);
                     categories.Save();
@@ -96,11 +98,15 @@ namespace Silerium.Controllers
                 {
                     ICategories categories = new CategoriesRepository(db);
                     Category category = categories.GetByID(categoryVM.Category.Id-1);
-                    using (var stream = new BinaryReader(categoryVM.FormImage.OpenReadStream()))
+                    using (var fstream = System.IO.File.Create(
+                        Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            "/wwwroot/images/categories/",
+                            $"category_{categoryVM.Category.Id}.jpg"
+                            )))
                     {
-                        byte[] imageData;
-                        imageData = stream.ReadBytes((int)categoryVM.FormImage.Length);
-                        category.Image = imageData;
+                        System.IO.File.Replace(category.Image, fstream.Name, null);
+                        categoryVM.Category.Image = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
                     }
                     category = categoryVM.Category;
                     categories.Save();
@@ -183,11 +189,14 @@ namespace Silerium.Controllers
 
                     subcategoryVM.Subcategory.Category = category;
 
-                    using(var stream = new BinaryReader(subcategoryVM.FormImage.OpenReadStream()))
+                    using (var fstream = System.IO.File.Create(
+                        Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            "/wwwroot/images/subcategories/",
+                            $"subcategory_{subcategoryVM.Subcategory.Id}.jpg"
+                            )))
                     {
-                        byte[] imageData;
-                        imageData = stream.ReadBytes((int)subcategoryVM.FormImage.Length);
-                        subcategoryVM.Subcategory.Image = imageData;
+                        subcategoryVM.Subcategory.Image = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
                     }
 
                     subcategories.Create(subcategoryVM.Subcategory);
@@ -224,11 +233,14 @@ namespace Silerium.Controllers
                 {
                     ISubcategories subcategories = new SubcategoriesRepository(db);
                     Subcategory subcategory = subcategories.GetByID(subcategoryVM.Subcategory.Id - 1);
-                    using (var stream = new BinaryReader(subcategoryVM.FormImage.OpenReadStream()))
+                    using (var fstream = System.IO.File.Create(
+                        Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            "/wwwroot/images/subcategories/",
+                            $"subcategory_{subcategoryVM.Subcategory.Id}.jpg"
+                            )))
                     {
-                        byte[] imageData;
-                        imageData = stream.ReadBytes((int)subcategoryVM.FormImage.Length);
-                        subcategory.Image = imageData;
+                        subcategoryVM.Subcategory.Image = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
                     }
                     subcategory = subcategoryVM.Subcategory;
                     subcategories.Save();
@@ -308,14 +320,20 @@ namespace Silerium.Controllers
                 {
                     IProducts products = new ProductsRepository(db);
                     ISubcategories subcategories = new SubcategoriesRepository(db);
+                    int imageId = 1;
                     foreach (var formImage in productViewModel.FormImages)
                     {
-                        byte[] imageData;
-                        using (var stream = new BinaryReader(formImage.OpenReadStream()))
+                        string imagePath;
+                        using (var fstream = System.IO.File.Create(
+                            Path.Combine(
+                                Directory.GetCurrentDirectory(),
+                                "/wwwroot/images/products/",
+                                $"product_{imageId}{productViewModel.Product.Id}")))
                         {
-                            imageData = stream.ReadBytes((int)formImage.Length);
+                            imagePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
                         }
-                        productViewModel.Product.Images.Add(new ProductImage { Image = imageData });
+                        productViewModel.Product.Images.Add(new ProductImage { Image = imagePath });
+                        imageId++;
                     }
                     List<ProductSpecification> specifications = new List<ProductSpecification>();
                     foreach (var specification in HttpContext.Request.Query.Where(q => q.Key.Contains("spec_name")))

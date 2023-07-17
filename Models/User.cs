@@ -29,6 +29,7 @@ namespace Silerium.Models
         public string? HomeAdress { get; set; }
         [MaxLength(20)]
         public string? Phone { get; set; }
+        public byte[] ProfilePicture { get; set; }
         public IEnumerable<Order> Orders { get; set; }
         public IEnumerable<Product> Products { get; set; }
     }

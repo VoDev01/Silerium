@@ -23,7 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Views\Products\" />
+    <Folder Include="wwwroot\images\categories\" />
+    <Folder Include="wwwroot\images\subcategories\" />
+    <Folder Include="wwwroot\images\products\" />
   </ItemGroup>
 
 </Project>
