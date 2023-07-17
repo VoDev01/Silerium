@@ -31,7 +31,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 ICategories categories = new CategoriesRepository(db);
-                return View(categories.GetAllWithInclude(c => c.PageName == "Hardware").FirstOrDefault());
+                return View(categories.GetAllWithInclude(c => c.Subcategories).Where(c => c.PageName == "Hardware").FirstOrDefault());
             }
         }
         public IActionResult Laptops()
@@ -39,7 +39,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 ICategories categories = new CategoriesRepository(db);
-                return View(categories.GetAllWithInclude(c => c.PageName == "Laptops").FirstOrDefault());
+                return View(categories.GetAllWithInclude(c => c.Subcategories).Where(c => c.PageName == "Laptops").FirstOrDefault());
             }
         }
         public IActionResult Smartphones()
@@ -47,7 +47,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 ICategories categories = new CategoriesRepository(db);
-                return View(categories.GetAllWithInclude(c => c.PageName == "Smartphones").FirstOrDefault());
+                return View(categories.GetAllWithInclude(c => c.Subcategories).Where(c => c.PageName == "Smartphones").FirstOrDefault());
             }
         }
         public IActionResult Monitors()
@@ -55,7 +55,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 ICategories categories = new CategoriesRepository(db);
-                return View(categories.GetAllWithInclude(c => c.PageName == "Monitors").FirstOrDefault());
+                return View(categories.GetAllWithInclude(c => c.Subcategories).Where(c => c.PageName == "Monitors").FirstOrDefault());
             }
         }
     }
