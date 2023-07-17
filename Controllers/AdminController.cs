@@ -57,7 +57,7 @@ namespace Silerium.Controllers
                         Path.Combine(
                             Directory.GetCurrentDirectory(), 
                             "/wwwroot/images/categories/", 
-                            $"category_{categoryVM.Category.Id}.jpg"
+                            $"category_{categoryVM.Category.Id}.jpgeg"
                             )))
                     {
                         categoryVM.Category.Image = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
