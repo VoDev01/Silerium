@@ -102,7 +102,7 @@ namespace Silerium.Controllers
                         Path.Combine(
                             Directory.GetCurrentDirectory(),
                             "/wwwroot/images/categories/",
-                            $"category_{categoryVM.Category.Id}.jpg"
+                            $"category_{categoryVM.Category.Id}.jpeg"
                             )))
                     {
                         System.IO.File.Replace(category.Image, fstream.Name, null);
