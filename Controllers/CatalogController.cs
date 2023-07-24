@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
@@ -31,9 +32,8 @@ namespace Silerium.Controllers
 
                 int firstProductIndex = (productsAtPage + 1) * (page - 1);
 
-                Subcategory _subcategory = subcategories.GetAllWithInclude(s => s.Name.ToLower() == subcategory).FirstOrDefault();
-                IEnumerable<Product> _products = products.GetAllWithInclude(p => p.Id >= firstProductIndex && p.Id <= productsAtPage * page);
-
+                Subcategory _subcategory = subcategories.FindSetByCondition(s => s.Name.ToLower() == subcategory).FirstOrDefault();
+                IEnumerable<Product> _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Id >= 0).ToList();
                 return View(new ProductsCatalogViewModel { Subcategory = _subcategory, Products = _products });
             }
         }
