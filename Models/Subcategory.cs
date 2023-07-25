@@ -11,7 +11,7 @@ namespace Silerium.Models
         [Required]
         public string Name { get; set; }
         public Category Category { get; set; }
-        public string? Image { get; set; }
+        public string? Image { get; set; } = null;
         public IEnumerable<Product> Products { get; set;}
     }
 }

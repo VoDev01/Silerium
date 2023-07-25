@@ -77,6 +77,19 @@ namespace Silerium.Migrations
                     b.ToTable("Orders", (string)null);
                 });
 
+            modelBuilder.Entity("Silerium.Models.Page", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Pages");
+                });
+
             modelBuilder.Entity("Silerium.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -97,6 +110,9 @@ namespace Silerium.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("PageId")
+                        .HasColumnType("int");
+
                     b.Property<int>("PriceRub")
                         .HasColumnType("int");
 
@@ -107,6 +123,8 @@ namespace Silerium.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PageId");
 
                     b.HasIndex("SubcategoryId");
 
@@ -267,11 +285,19 @@ namespace Silerium.Migrations
 
             modelBuilder.Entity("Silerium.Models.Product", b =>
                 {
+                    b.HasOne("Silerium.Models.Page", "Page")
+                        .WithMany("Products")
+                        .HasForeignKey("PageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Silerium.Models.Subcategory", "Subcategory")
                         .WithMany("Products")
                         .HasForeignKey("SubcategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Page");
 
                     b.Navigation("Subcategory");
                 });
@@ -312,6 +338,11 @@ namespace Silerium.Migrations
             modelBuilder.Entity("Silerium.Models.Category", b =>
                 {
                     b.Navigation("Subcategories");
+                });
+
+            modelBuilder.Entity("Silerium.Models.Page", b =>
+                {
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("Silerium.Models.Product", b =>

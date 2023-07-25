@@ -11,7 +11,7 @@
         <div>
             <h3>@product.Name</h3>
             <img src="@product.Images.FirstOrDefault().Image" alt="@product.Name">
-            <p>Цена в рублях: @product.PriceRub &8381;</p>
+            <p>Цена в рублях: @product.PriceRub &#8381;</p>
             <div class="row">
                 <div class="col-4">
                     <p>Количество - @product.StockAmount шт.</p>
@@ -28,4 +28,47 @@
             </div>
         </div>
     }
+    <nav aria-label="Search results pages.">
+        <ul class="pagination justify-content-center">
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @for (int i = Model.FirstPaginationIndex; i <= Model.LastPaginationIndex; i++)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-action="Pages" asp-controller="Movies"
+                   asp-route-page="@i"
+                   asp-route-country="@Context.Request.Query["Country"]"
+                   asp-route-genre="@Context.Request.Query["Genre"]"
+                   asp-route-minrating="@Context.Request.Query["MinRating"]"
+                   asp-route-maxrating="@Context.Request.Query["MaxRating"]"
+                   asp-route-minyear="@Context.Request.Query["MinYear"]"
+                   asp-route-maxyear="@Context.Request.Query["MaxYear"]"
+                   asp-route-order="@Context.Request.Query["Order"]"
+                   asp-route-type="@Context.Request.Query["Type"]">@i</a>
+                </li>
+            }
+            <li class="page-item">
+                <input aria-label="Jump to page" class="form-control shadow-none" name="page" type="number" placeholder="К странице ..."
+                       style="width: 125px; height: 38px;" />
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>

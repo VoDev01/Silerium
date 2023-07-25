@@ -20,6 +20,9 @@
                     @Html.DisplayName("Описание")
                 </th>
                 <th>
+                    @Html.DisplayName("Цена руб")
+                </th>
+                <th>
                     @Html.DisplayName("Кол-во")
                 </th>
                 <th>
@@ -40,14 +43,19 @@
                     @Html.DisplayFor(modelItem => item.Description)
                 </td>
                 <td>
+                    @Html.DisplayFor(modelItem => item.PriceRub)<span>&#8381;</span>
+                </td>
+                <td>
                     @Html.DisplayFor(modelItem => item.StockAmount)<span>шт.</span>
                 </td>
                 <td>
-                        @{
-                            if (item.Available)
-                                Html.Display("Да");
-                            else
-                                Html.Display("Нет");
+                        @if (item.Available)
+                        {
+                            Html.Display("Да");
+                        }
+                        else
+                        {
+                            Html.Display("Нет");
                         }
                 </td>
                 <td>

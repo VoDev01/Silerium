@@ -53,14 +53,19 @@ namespace Silerium.Controllers
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     ICategories categories = new CategoriesRepository(db);
+                    int num = categories.GetAll().Count();
                     using (var fstream = System.IO.File.Create(
                         Path.Combine(
                             Directory.GetCurrentDirectory(), 
-                            "/wwwroot/images/categories/", 
-                            $"category_{categoryVM.Category.Id}.jpgeg"
+                            "wwwroot",
+                            "images",
+                            "categories",
+                            $"category_{num}.jpg"
                             )))
                     {
-                        categoryVM.Category.Image = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
+                        categoryVM.FormImage.CopyTo(fstream);
+                        fstream.Flush();
+                        categoryVM.Category.Image = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                     }
                     categories.Create(categoryVM.Category);
                     categories.Save();
@@ -98,15 +103,17 @@ namespace Silerium.Controllers
                 {
                     ICategories categories = new CategoriesRepository(db);
                     Category category = categories.GetByID(categoryVM.Category.Id-1);
+                    int num = categories.GetAll().Count();
                     using (var fstream = System.IO.File.Create(
                         Path.Combine(
                             Directory.GetCurrentDirectory(),
                             "/wwwroot/images/categories/",
-                            $"category_{categoryVM.Category.Id}.jpeg"
+                            $"category_{categoryVM.Category.Id}.jpg"
                             )))
                     {
-                        System.IO.File.Replace(category.Image, fstream.Name, null);
-                        categoryVM.Category.Image = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
+                        categoryVM.FormImage.CopyTo(fstream);
+                        fstream.Flush();
+                        categoryVM.Category.Image = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                     }
                     category = categoryVM.Category;
                     categories.Save();
@@ -126,8 +133,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 ICategories categories = new CategoriesRepository(db);
-                IEnumerable<Category> _categories = categories.GetAllWithInclude(c => c.Subcategories);
-                Category category = _categories.ElementAt(id-1);
+                Category category = categories.GetAllWithInclude(c => c.Subcategories).ElementAt(id-1);
                 return View(category);
             }
         }
@@ -187,16 +193,21 @@ namespace Silerium.Controllers
                     ICategories categories = new CategoriesRepository(db);
                     Category category = categories.GetByID(categoryid - 1);
 
+                    int num = subcategories.GetAll().Count();
                     subcategoryVM.Subcategory.Category = category;
 
                     using (var fstream = System.IO.File.Create(
                         Path.Combine(
                             Directory.GetCurrentDirectory(),
-                            "/wwwroot/images/subcategories/",
-                            $"subcategory_{subcategoryVM.Subcategory.Id}.jpg"
+                            "wwwroot",
+                            "images",
+                            "subcategories",
+                            $"subcategory_{num}.jpg"
                             )))
                     {
-                        subcategoryVM.Subcategory.Image = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
+                        subcategoryVM.FormImage.CopyTo(fstream);
+                        fstream.Flush();
+                        subcategoryVM.Subcategory.Image = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                     }
 
                     subcategories.Create(subcategoryVM.Subcategory);
@@ -233,14 +244,20 @@ namespace Silerium.Controllers
                 {
                     ISubcategories subcategories = new SubcategoriesRepository(db);
                     Subcategory subcategory = subcategories.GetByID(subcategoryVM.Subcategory.Id - 1);
+                    int num = subcategories.GetAll().Count();
+
                     using (var fstream = System.IO.File.Create(
                         Path.Combine(
                             Directory.GetCurrentDirectory(),
-                            "/wwwroot/images/subcategories/",
-                            $"subcategory_{subcategoryVM.Subcategory.Id}.jpg"
+                            "wwwroot",
+                            "images",
+                            "subcategories",
+                            $"subcategory_{num}.jpg"
                             )))
                     {
-                        subcategoryVM.Subcategory.Image = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
+                        subcategoryVM.FormImage.CopyTo(fstream);
+                        fstream.Flush();
+                        subcategoryVM.Subcategory.Image = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                     }
                     subcategory = subcategoryVM.Subcategory;
                     subcategories.Save();
@@ -312,7 +329,7 @@ namespace Silerium.Controllers
         // POST: AdminController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateProduct(ProductViewModel productViewModel, int product_subcategory)
+        public IActionResult CreateProduct(ProductViewModel productVM, int product_subcategory)
         {
             try
             {
@@ -320,19 +337,42 @@ namespace Silerium.Controllers
                 {
                     IProducts products = new ProductsRepository(db);
                     ISubcategories subcategories = new SubcategoriesRepository(db);
+                    IPages pages = new PagesRepository(db);
+
+                    Page page = new Page();
+
+                    if (pages.GetAll().Count() == 0)
+                    {
+                        productVM.Product.Page = new Page { Products = new List<Product>() { productVM.Product } };
+                    }
+                    else
+                    {
+                        if (products.FindSetByCondition(p => p.Page.Id == CatalogController.CurrentPageIndex).Count() > CatalogController.ProductsAtPage)
+                            productVM.Product.Page = new Page { Products = new List<Product>() { productVM.Product } };
+                        else
+                            productVM.Product.Page = pages.GetByID(CatalogController.CurrentPageIndex);
+                    }
+
+                    int num = products.GetAll().Count();
                     int imageId = 1;
-                    foreach (var formImage in productViewModel.FormImages)
+
+                    foreach (var formImage in productVM.FormImages)
                     {
                         string imagePath;
                         using (var fstream = System.IO.File.Create(
-                            Path.Combine(
-                                Directory.GetCurrentDirectory(),
-                                "/wwwroot/images/products/",
-                                $"product_{imageId}{productViewModel.Product.Id}")))
+                        Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            "wwwroot",
+                            "images",
+                            "products",
+                            $"product_{imageId}{productVM.Product.Id}"
+                            )))
                         {
-                            imagePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), fstream.Name);
+                            formImage.CopyTo(fstream);
+                            fstream.Flush();
+                            imagePath = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                         }
-                        productViewModel.Product.Images.Add(new ProductImage { Image = imagePath });
+                        productVM.Product.Images.Add(new ProductImage { Image = imagePath });
                         imageId++;
                     }
                     List<ProductSpecification> specifications = new List<ProductSpecification>();
@@ -340,8 +380,8 @@ namespace Silerium.Controllers
                     {
                         specifications.Add(new ProductSpecification { Name = specification.Key, Specification = specification.Value });
                     }
-                    productViewModel.Product.Subcategory = subcategories.GetByID(product_subcategory - 1);
-                    products.Create(productViewModel.Product);
+                    productVM.Product.Subcategory = subcategories.GetByID(product_subcategory - 1);
+                    products.Create(productVM.Product);
                     products.Save();
                     return RedirectToAction("Products", "Admin");
                 }

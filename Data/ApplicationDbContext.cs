@@ -18,6 +18,8 @@ namespace Silerium.Data
         public DbSet<ProductSpecification> ProductSpecification { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Page> Pages { get; set; }
+
         private IEntityTypeConfiguration<Product> productConfiguration = new ProductConfiguration();
         private static DbContextOptions GetOptions(string connectionString)
         {

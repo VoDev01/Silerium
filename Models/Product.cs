@@ -18,6 +18,7 @@ namespace Silerium.Models
         public Subcategory Subcategory { get; set; }
         public List<ProductSpecification> Specifications { get; set; } = new List<ProductSpecification>();
         public List<ProductImage> Images { get; set; } = new List<ProductImage>();
+        public Page Page { get; set; }
         public IEnumerable<User> Users { get; set; }
         public IEnumerable<Order> Orders { get; set; }
     }
