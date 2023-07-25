@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MessagePack;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
@@ -12,7 +13,10 @@ namespace Silerium.Controllers
     {
         private string connectionString;
         public ILogger<CatalogController> logger;
-        public int productsAtPage = 20;
+        public static readonly int ProductsAtPage = 20;
+        private int pagesCount = 10;
+        private int pageMultiplier = 1;
+        public static int CurrentPageIndex { get; set; } = 1;
         public CatalogController(ILogger<CatalogController> logger)
         {
             IConfiguration configuration = new ConfigurationBuilder()
@@ -30,11 +34,25 @@ namespace Silerium.Controllers
                 ISubcategories subcategories = new SubcategoriesRepository(db);
                 IProducts products = new ProductsRepository(db);
 
-                int firstProductIndex = (productsAtPage + 1) * (page - 1);
+                CurrentPageIndex = page;
+                int firstPageIndex = 1;
+                int lastPageIndex = 21;
+                if (page > pagesCount * pageMultiplier)
+                {
+                    firstPageIndex = (pagesCount + 1) * (pageMultiplier - 1);
+                    lastPageIndex = pagesCount * pageMultiplier;
+                    pageMultiplier++;
+                }
 
                 Subcategory _subcategory = subcategories.FindSetByCondition(s => s.Name.ToLower() == subcategory).FirstOrDefault();
-                IEnumerable<Product> _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Id >= 0).ToList();
-                return View(new ProductsCatalogViewModel { Subcategory = _subcategory, Products = _products });
+                IEnumerable<Product> _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page).ToList();
+
+                return View(new ProductsCatalogViewModel { 
+                    Subcategory = _subcategory, 
+                    Products = _products, 
+                    FirstPaginationIndex = firstPageIndex, 
+                    LastPaginationIndex = lastPageIndex 
+                });
             }
         }
     }

@@ -339,6 +339,22 @@ namespace Silerium.Controllers
                 {
                     IProducts products = new ProductsRepository(db);
                     ISubcategories subcategories = new SubcategoriesRepository(db);
+                    IPages pages = new PagesRepository(db);
+
+                    Page page = new Page();
+
+                    if (pages.GetAll().Count() == 0)
+                    {
+                        productVM.Product.Page = new Page { Products = new List<Product>() { productVM.Product } };
+                    }
+                    else
+                    {
+                        if (products.FindSetByCondition(p => p.Page.Id == CatalogController.CurrentPageIndex).Count() > CatalogController.ProductsAtPage)
+                            productVM.Product.Page = new Page { Products = new List<Product>() { productVM.Product } };
+                        else
+                            productVM.Product.Page = pages.GetByID(CatalogController.CurrentPageIndex);
+                    }
+
                     int num = products.GetAll().Count();
                     int imageId = 1;
 
