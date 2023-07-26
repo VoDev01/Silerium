@@ -339,8 +339,6 @@ namespace Silerium.Controllers
                     ISubcategories subcategories = new SubcategoriesRepository(db);
                     IPages pages = new PagesRepository(db);
 
-                    Page page = new Page();
-
                     if (pages.GetAll().Count() == 0)
                     {
                         productVM.Product.Page = new Page { Products = new List<Product>() { productVM.Product } };

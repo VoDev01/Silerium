@@ -1,9 +1,11 @@
 ﻿using MessagePack;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
+using Silerium.Models.Query;
 using Silerium.Models.Repositories;
 using Silerium.ViewModels;
 
@@ -26,8 +28,22 @@ namespace Silerium.Controllers
             connectionString = configuration.GetConnectionString("Default");
             this.logger = logger;
         }
+        public IActionResult Product(int id)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                ISubcategories subcategories = new SubcategoriesRepository(db);
+                IProducts products = new ProductsRepository(db);
+                Product product = products.
+                    GetAllWithInclude(p => p.Subcategory).
+                    Include(p => p.Specifications).
+                    Include(p => p.Images).
+                    Where(p => p.Id == id).FirstOrDefault();
 
-        public IActionResult Products(string subcategory, int page = 1)
+                return View(new ProductViewModel { Product = product });
+            }
+        }
+        public IActionResult Products(string subcategory_name, string category_name, string product_name, string sort_order, int page = 1)
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
@@ -36,7 +52,7 @@ namespace Silerium.Controllers
 
                 CurrentPageIndex = page;
                 int firstPageIndex = 1;
-                int lastPageIndex = 21;
+                int lastPageIndex = 10;
                 if (page > pagesCount * pageMultiplier)
                 {
                     firstPageIndex = (pagesCount + 1) * (pageMultiplier - 1);
@@ -44,16 +60,28 @@ namespace Silerium.Controllers
                     pageMultiplier++;
                 }
 
-                Subcategory _subcategory = subcategories.FindSetByCondition(s => s.Name.ToLower() == subcategory).FirstOrDefault();
-                IEnumerable<Product> _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page).ToList();
+                Subcategory _subcategory = subcategories.FindSetByCondition(s => s.Name.ToLower() == subcategory_name).FirstOrDefault();
+                IEnumerable<Product> _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
+                    .OrderByDescending(p => p.Name).ToList();
 
                 return View(new ProductsCatalogViewModel { 
                     Subcategory = _subcategory, 
-                    Products = _products, 
+                    Products = _products,
+                    ProductsQuery = new ProductsQuery(),
                     FirstPaginationIndex = firstPageIndex, 
                     LastPaginationIndex = lastPageIndex 
                 });
             }
+        }
+        [HttpPost]
+        public IActionResult Products(string subcategory_name, string sort_order, int page = 1)
+        {
+            return RedirectToAction("Products", "Catalog", new
+            {
+                subcategory_name,
+                sort_order,
+                page
+            });
         }
     }
 }

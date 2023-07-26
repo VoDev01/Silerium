@@ -5,7 +5,140 @@
 }
 
 <h1>Товары</h1>
+
 <div>
+    <nav class="navbar navbar-expand-md">
+        <div class="container-fluid g-3">
+            <span class="navbar-text">Сортировать по:</span>
+            <div class="navbar-collapse">
+                <div class="navbar-nav">
+                    @switch(Model.ProductsQuery.SortOrder)
+                    {
+                        case Silerium.Models.Query.SortOrder.NAME_ASC:
+                            <a class="nav-link active text-black" asp-action="Products" asp-controller="Catalog" 
+                            asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="NAME_DESC">
+                                Названию
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up"></i>
+                            </a>
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="POP_DESC">
+                                Популярности
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="PRICE_DESC">
+                                Цене
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            break;
+                        case Silerium.Models.Query.SortOrder.NAME_DESC:
+                            <a class="nav-link active text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="NAME_ASC">
+                                Названию
+                                <i class="bi bi-arrow-down"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="POP_DESC">
+                                Популярности
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="PRICE_DESC">
+                                Цене
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                        break;
+                        case Silerium.Models.Query.SortOrder.POP_ASC:
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="NAME_DESC">
+                                Названию
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            <a class="nav-link active text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="POP_DESC">
+                                Популярности
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up"></i>
+                            </a>
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="PRICE_DESC">
+                                Цене
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                        break;
+                        case Silerium.Models.Query.SortOrder.POP_DESC:
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="NAME_DESC">
+                                Названию
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            <a class="nav-link active text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="POP_ASC">
+                                Популярности
+                                <i class="bi bi-arrow-down"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="PRICE_DESC">
+                                Цене
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                        break;
+                        case Silerium.Models.Query.SortOrder.PRICE_ASC:
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="NAME_DESC">
+                                Названию
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="POP_DESC">
+                                Популярности
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            <a class="nav-link active text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="PRICE_DESC">
+                                Цене
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up"></i>
+                            </a>
+                        break;
+                        case Silerium.Models.Query.SortOrder.PRICE_DESC:
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="NAME_DESC">
+                                Названию
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            <a class="nav-link text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="POP_DESC">
+                                Популярности
+                                <i class="bi bi-arrow-down text-secondary"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                            <a class="nav-link active text-black" asp-action="Products" asp-controller="Catalog"
+                                asp-route-subcategory_name="@Model.Subcategory.Name" asp-route-sort_order="PRICE_ASC">
+                                Цене
+                                <i class="bi bi-arrow-down"></i>
+                                <i class="bi bi-arrow-up text-secondary"></i>
+                            </a>
+                        break;
+                    }
+                </div>
+            </div>
+        </div>
+    </nav>
     @foreach(var product in Model.Products)
     {
         <div>
@@ -23,7 +156,7 @@
                     <p>Можно купить - @available</p>
                 </div>
                 <div class="col-4">
-                    <a class="btn btn-success" href="#">Купить</a>
+                    <a class="btn btn-success" asp-action="Product" asp-controller="Catalog" asp-route-id="@product.Id">Купить</a>
                 </div>
             </div>
         </div>
@@ -45,14 +178,10 @@
                 <li class="page-item">
                     <a class="page-link" asp-action="Pages" asp-controller="Movies"
                    asp-route-page="@i"
-                   asp-route-country="@Context.Request.Query["Country"]"
-                   asp-route-genre="@Context.Request.Query["Genre"]"
-                   asp-route-minrating="@Context.Request.Query["MinRating"]"
-                   asp-route-maxrating="@Context.Request.Query["MaxRating"]"
-                   asp-route-minyear="@Context.Request.Query["MinYear"]"
-                   asp-route-maxyear="@Context.Request.Query["MaxYear"]"
-                   asp-route-order="@Context.Request.Query["Order"]"
-                   asp-route-type="@Context.Request.Query["Type"]">@i</a>
+                   asp-route-category_name="@Context.Request.Query["ProductsQuery.CategoryName"]"
+                   asp-route-subcategory_name="@Context.Request.Query["ProductsQuery.SubcategoryName"]"
+                   asp-route-product_name="@Context.Request.Query["ProductsQuery.ProductName"]"
+                   asp-route-sort_order="@Context.Request.Query["ProductsQuery.SortOrder"]">@i</a>
                 </li>
             }
             <li class="page-item">
