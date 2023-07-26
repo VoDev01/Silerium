@@ -24,7 +24,6 @@ namespace Silerium.Middlewares
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                ISubcategories subcategories = new SubcategoriesRepository(db);
                 IProducts products = new ProductsRepository(db);
 
                 List <Product> _products = new List<Product>();
@@ -55,6 +54,10 @@ namespace Silerium.Middlewares
                     case nameof(Models.Query.SortOrder.PRICE_ASC):
                         _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
                     .OrderBy(p => p.PriceRub).ToList();
+                        break;
+                    default:
+                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
+                    .OrderByDescending(p => p.Name).ToList();
                         break;
                 }
 

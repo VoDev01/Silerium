@@ -61,12 +61,39 @@ namespace Silerium.Controllers
                 }
 
                 Subcategory _subcategory = subcategories.FindSetByCondition(s => s.Name.ToLower() == subcategory_name).FirstOrDefault();
-                List<Product> _products = (List<Product>)HttpContext.Items["products"];
+                List<Product> _products = new List<Product>();
+                switch(sort_order)
+                {
+                    case nameof(Models.Query.SortOrder.NAME_DESC):
+                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
+                    .OrderByDescending(p => p.Name).ToList();
+                        break;
+                    case nameof(Models.Query.SortOrder.NAME_ASC):
+                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
+                    .OrderBy(p => p.Name).ToList();
+                        break;
+                    case nameof(Models.Query.SortOrder.POP_DESC):
+                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Include(p => p.Orders).Where(p => p.Page.Id == page)
+                    .OrderByDescending(p => p.Orders.Count()).ToList();
+                        break;
+                    case nameof(Models.Query.SortOrder.POP_ASC):
+                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Include(p => p.Orders).Where(p => p.Page.Id == page)
+                    .OrderBy(p => p.Orders.Count()).ToList();
+                        break;
+                    case nameof(Models.Query.SortOrder.PRICE_DESC):
+                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
+                    .OrderByDescending(p => p.PriceRub).ToList();
+                        break;
+                    case nameof(Models.Query.SortOrder.PRICE_ASC):
+                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
+                    .OrderBy(p => p.PriceRub).ToList();
+                        break;
+                }
 
                 return View(new ProductsCatalogViewModel { 
                     Subcategory = _subcategory, 
                     Products = _products,
-                    ProductsQuery = new ProductsQuery(),
+                    ProductsQuery = new ProductsQuery { Page = page, SortOrder = Enum.Parse<Models.Query.SortOrder>(sort_order) },
                     FirstPaginationIndex = firstPageIndex, 
                     LastPaginationIndex = lastPageIndex 
                 });

@@ -175,14 +175,28 @@
             </li>
             @for (int i = Model.FirstPaginationIndex; i <= Model.LastPaginationIndex; i++)
             {
-                <li class="page-item">
-                    <a class="page-link" asp-action="Pages" asp-controller="Movies"
-                   asp-route-page="@i"
-                   asp-route-category_name="@Context.Request.Query["ProductsQuery.CategoryName"]"
-                   asp-route-subcategory_name="@Context.Request.Query["ProductsQuery.SubcategoryName"]"
-                   asp-route-product_name="@Context.Request.Query["ProductsQuery.ProductName"]"
-                   asp-route-sort_order="@Context.Request.Query["ProductsQuery.SortOrder"]">@i</a>
-                </li>
+                if (i == Model.ProductsQuery.Page)
+                {
+                    <li class="page-item">
+                            <a class="page-link active" asp-action="Products" asp-controller="Catalog"
+                        asp-route-page="@i"
+                        asp-route-category_name="@Context.Request.Query["ProductsQuery.CategoryName"]"
+                        asp-route-subcategory_name="@Context.Request.Query["ProductsQuery.SubcategoryName"]"
+                        asp-route-product_name="@Context.Request.Query["ProductsQuery.ProductName"]"
+                        asp-route-sort_order="@Context.Request.Query["ProductsQuery.SortOrder"]">@i</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="Products" asp-controller="Catalog"
+                    asp-route-page="@i"
+                    asp-route-category_name="@Context.Request.Query["ProductsQuery.CategoryName"]"
+                    asp-route-subcategory_name="@Context.Request.Query["ProductsQuery.SubcategoryName"]"
+                    asp-route-product_name="@Context.Request.Query["ProductsQuery.ProductName"]"
+                    asp-route-sort_order="@Context.Request.Query["ProductsQuery.SortOrder"]">@i</a>
+                    </li>
+                }
             }
             <li class="page-item">
                 <input aria-label="Jump to page" class="form-control shadow-none" name="page" type="number" placeholder="К странице ..."

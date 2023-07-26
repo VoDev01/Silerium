@@ -32,11 +32,6 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/Catalog/Products/", StringComparison.OrdinalIgnoreCase), appbuilder =>
-{
-    app.UseProductsSortingMiddleware(builder.Configuration.GetConnectionString("Default"));
-});
-
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
