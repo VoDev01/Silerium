@@ -61,8 +61,7 @@ namespace Silerium.Controllers
                 }
 
                 Subcategory _subcategory = subcategories.FindSetByCondition(s => s.Name.ToLower() == subcategory_name).FirstOrDefault();
-                IEnumerable<Product> _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
-                    .OrderByDescending(p => p.Name).ToList();
+                List<Product> _products = (List<Product>)HttpContext.Items["products"];
 
                 return View(new ProductsCatalogViewModel { 
                     Subcategory = _subcategory, 
