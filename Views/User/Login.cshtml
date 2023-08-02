@@ -1,4 +1,4 @@
-﻿@model Silerium.ViewModels.UserLoginViewModel
+﻿@model Silerium.ViewModels.AuthModels.UserLoginViewModel
 @{
     ViewData["title"] = "Вход в профиль";
 }
@@ -9,13 +9,8 @@
 }
 
 <h2 class="text-center">Вход</h2>
-<div class="container border w-50">
+<div class="container w-50">
     <form asp-action="Login" asp-controller="User">
-        <div class="mb-3 mt-2">
-            <label class="form-label" asp-for="Login">Логин</label>
-            <input class="form-control" type="text" asp-for="Login" />
-            <span asp-validation-for="Login" class="text-danger"></span>
-        </div>
         @if (ViewData.ModelState["Wrong Login"] != null)
         {
             <ul>

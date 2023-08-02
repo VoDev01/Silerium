@@ -6,10 +6,9 @@
 <div class="container">
     <div class="row">
         <div class="col-2">
-            <img alt="Картинка профиля @Model.User.NickName" src="data:image;base64,@(Convert.ToBase64String(Model.User.ProfilePicture))" width="168" height="168" />
+            <img alt="Картинка профиля" src="data:image;base64,@(Convert.ToBase64String(Model.User.ProfilePicture))" width="168" height="168" />
         </div>
         <div class="col-10">
-            <h2>@Model.User.NickName</h2>
             <h3>Имя: @Model.User.Name</h3>
             <h3>Фамилия: @Model.User.Surname</h3>
             @if (Model.User.BirthDate != null)
@@ -20,4 +19,5 @@
         </div>
     </div>
     <a class="text-secondary text-decoration-none" asp-action="EditProfile" asp-controller="User">Редактировать профиль</a>
+    <a class="text-secondary text-decoration-none" asp-action="Logout" asp-controller="User">Выйти из профиля</a>
 </div>

@@ -1,14 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
+using Silerium.Models.Interfaces;
+using Silerium.Models.Repositories;
 using Silerium.ViewModels;
+using Silerium.ViewModels.AuthModels;
+using System.Security.Claims;
 
 namespace Silerium.Controllers
 {
     public class UserController : Controller
     {
-        public static User? CurrentUser { get; private set; } = null;
         private readonly string connectionString;
         private readonly ILogger<UserController> logger;
         public UserController(ILogger<UserController> logger)
@@ -24,11 +29,14 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
+                IUsers users = new UsersRepository(db);
                 UserViewModel userViewModel = new UserViewModel();
-                userViewModel.User = CurrentUser;
+                string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
+                userViewModel.User = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
                 return View(userViewModel);
             }
         }
+        [ValidateAntiForgeryToken]
         [HttpPost]
         public IActionResult EditProfile(UserViewModel userVM, int country)
         {
@@ -36,12 +44,13 @@ namespace Silerium.Controllers
             {
                 IUsers users = new UsersRepository(db);
 
-                User user = users.GetByID(CurrentUser.Id);
-                CurrentUser.NickName = userVM.User.NickName == string.Empty ? CurrentUser.NickName : userVM.User.NickName;
-                CurrentUser.Name = userVM.User.Name == string.Empty ? CurrentUser.Name : userVM.User.Name;
-                CurrentUser.Surname = userVM.User.Surname == string.Empty ? CurrentUser.Surname : userVM.User.Surname;
-                CurrentUser.Email = userVM.User.Email == string.Empty ? CurrentUser.Email : userVM.User.Email;
-                CurrentUser.BirthDate = userVM.User.BirthDate;
+                User? user = null;
+                string userEmail = HttpContext.User.Identity.Name;
+                user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                user.Name = userVM.User.Name == string.Empty ? user.Name : userVM.User.Name;
+                user.Surname = userVM.User.Surname == string.Empty ? user.Surname : userVM.User.Surname;
+                user.Email = userVM.User.Email == string.Empty ? user.Email : userVM.User.Email;
+                user.BirthDate = userVM.User.BirthDate;
                 try
                 {
                     byte[] imageData;
@@ -49,8 +58,7 @@ namespace Silerium.Controllers
                     {
                         imageData = stream.ReadBytes((int)userVM.PfpFile.Length);
                     }
-                    CurrentUser.ProfilePicture = imageData;
-                    user = CurrentUser;
+                    user.ProfilePicture = imageData;
                 }
                 catch (Exception e)
                 {
@@ -61,30 +69,10 @@ namespace Silerium.Controllers
                 return RedirectToAction("Profile", "User");
             }
         }
-        public async Task<IActionResult> SetMovieRating(int rating, int movieid)
-        {
-            using (var db = new ApplicationDbContext(connectionString))
-            {
-                IUsers users = new UsersRepository(db);
-                try
-                {
-                    User? user = users
-                        .GetAll().ToList().FirstOrDefault();
-                    await users.SaveAsync();
-                    return RedirectToAction("Page", "Movies", new { id = movieid });
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e.Message);
-                    return RedirectToAction("Page", "Movies", new { id = movieid });
-                }
-            }
-        }
         [Route("User/Profile")]
-        [Route("User/Profile/{userUrlId}")]
         //Get the profile page of the specified user
-        public IActionResult Profile(string? userUrlId = null) //UserUlrId is an id specified by the user for an easier identification
-        {                                                        //UserId is used in the table as a key and also can be used to identificate user if UserUrlId is not given
+        public IActionResult Profile()
+        {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 try
@@ -92,16 +80,15 @@ namespace Silerium.Controllers
                     IUsers users = new UsersRepository(db);
                     UserViewModel userVM = new UserViewModel();
                     User? user = null;
-                    if (CurrentUser == null)
-                    {
-                        user = users.GetAllWithInclude(u => u.Country).Include(u => u.MoviesRatings).Where(u => u.UserUrlId == userUrlId).FirstOrDefault();
-                        if (user != null)
-                            userVM.User = user;
-                        else
-                            return RedirectToAction("Error", "Home");
-                    }
+                    string userEmail = HttpContext.User.Identity.Name;
+                    user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                    if (user != null)
+                        userVM.User = user;
                     else
-                        userVM.User = CurrentUser;
+                    {
+                        logger.LogError("User was not authenticated");
+                        return RedirectToAction("Error", "Home");
+                    }
                     return View(userVM);
                 }
                 catch (Exception e)
@@ -125,82 +112,78 @@ namespace Silerium.Controllers
                     return Json(true);
             }
         }
-        [AcceptVerbs("Get", "Post")]
-        public async Task<JsonResult> CheckNickName(string nickname)
+        [Route("User/Login")]
+        public IActionResult Login()
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IUsers users = new UsersRepository(db);
-                if (await users.IfAnyAsync(u => u.NickName == nickname))
-                {
-                    return Json(false);
-                }
-                else
-                    return Json(true);
-            }
-        }
-        [Route("User/Login")]
-        public IActionResult Login(int? movieid = null)
-        {
-            if (CurrentUser == null)
-            {
-                if (movieid == null)
-                    return View();
-                else
+                UserViewModel userVM = new UserViewModel();
+                User? user = null;
+                string userEmail = HttpContext.User.Identity.Name;
+                user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+
+                if (user == null)
                 {
                     UserLoginViewModel userLoginVM = new UserLoginViewModel();
                     return View(userLoginVM);
                 }
+                else
+                    return RedirectToAction("Profile");
             }
-            else
-                return RedirectToAction("Profile");
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Route("User/Login")]
-        public IActionResult Login(UserLoginViewModel userLoginVM)
+        public async Task<IActionResult> Login(UserLoginViewModel userLoginVM)
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (ModelState.IsValid)
             {
-                IUsers users = new UsersRepository(db);
-                User? user = users.GetAllWithInclude(u => u.Country).
-                    Include(u => u.MoviesRatings).
-                    ThenInclude(r => r.Movie).
-                    Where(u => u.NickName == userLoginVM.Login
-                    && u.Password == userLoginVM.Password
-                    && u.Email == userLoginVM.Email).FirstOrDefault();
-                if (user != null)
+                using (var db = new ApplicationDbContext(connectionString))
                 {
-                    CurrentUser = user;
-                    if (userLoginVM.MovieId == null)
-                        return RedirectToAction("Profile", new { user.UserUrlId });
-                    else
-                        return RedirectToAction("Page", "Movies", new { id = userLoginVM.MovieId });
-                }
-                else
-                {
-                    if (users.FindSetByCondition(u => u.Password == userLoginVM.Password).Count() == 0)
+                    IUsers users = new UsersRepository(db);
+                    User? user = users.GetAllWithInclude(u => u.Orders).Where(
+                        u => u.Name == u.Name &&
+                        u.Password == userLoginVM.Password &&
+                        u.Email == userLoginVM.Email).FirstOrDefault();
+                    if (user != null)
                     {
-                        ModelState.AddModelError("Wrong Password", "Неверный пароль");
-                        return View();
-                    }
-                    else if (users.FindSetByCondition(u => u.Email == userLoginVM.Email).Count() == 0)
-                    {
-                        ModelState.AddModelError("Wrong Email", "Неверный email");
-                        return View();
-                    }
-                    else if (users.FindSetByCondition(u => u.NickName == userLoginVM.Login).Count() == 0)
-                    {
-                        ModelState.AddModelError("Wrong Login", "Неверный логин");
-                        return View();
+                        var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Name, user.Email),
+                            new Claim(ClaimTypes.Role, "Client")
+                        };
+                        ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+                        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                        HttpContext.User = claimsPrincipal;
+                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+                        return RedirectToAction("Profile", "User");
                     }
                     else
                     {
-                        ModelState.AddModelError("User not found", "Такого профиля не существует. Зарегистрируйтесь и создайте новый.");
-                        logger.LogWarning($"User with nickname {userLoginVM.Login} was not found or wrong login data was typed");
-                        return View();
+                        if (users.FindSetByCondition(u => u.Password == userLoginVM.Password).Count() == 0)
+                        {
+                            ModelState.AddModelError("Wrong Password", "Неверный пароль");
+                            return View();
+                        }
+                        else if (users.FindSetByCondition(u => u.Email == userLoginVM.Email).Count() == 0)
+                        {
+                            ModelState.AddModelError("Wrong Email", "Неверный email");
+                            return View();
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("User not found", "Такого профиля не существует. Зарегистрируйтесь и создайте новый.");
+                            return View();
+                        }
                     }
                 }
+            }
+            else
+            {
+                ModelState.AddModelError("ModelState Invalid", "Заполненные данные не верны");
+                return RedirectToAction("Login", "User");
             }
         }
 
@@ -209,67 +192,88 @@ namespace Silerium.Controllers
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                UserViewModel userViewModel = new UserViewModel();
                 if (error != null)
                     ModelState.AddModelError("ServerError", error);
-                return View(userViewModel);
+                return View(new UserRegisterViewModel());
             }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Route("User/Register")]
-        public IActionResult Register(UserViewModel userVM, string password_repeat, int country)
+        public async Task<IActionResult> Register(UserRegisterViewModel userRegisterVM)
         {
-            if (password_repeat == userVM.User.Password)
+            if (ModelState.IsValid)
             {
-                //if (ModelState.IsValid)
-                //{
-                using (var db = new ApplicationDbContext(connectionString))
+                if (userRegisterVM.ConfirmPassword == userRegisterVM.Password)
                 {
-                    IUsers users = new UsersRepository(db);
-                    UserViewModel userVMloc = new UserViewModel();
-                    User user = new User
+                    using (var db = new ApplicationDbContext(connectionString))
                     {
-                        NickName = userVM.User.NickName,
-                        Name = userVM.User.Name,
-                        Surname = userVM.User.Surname,
-                        Password = userVM.User.Password,
-                        Email = userVM.User.Email,
-                        BirthDate = userVM.User.BirthDate
-                    };
-
-                    byte[] imageData;
-                    if (userVM.PfpFile != null)
-                    {
-                        using (var stream = new BinaryReader(userVM.PfpFile.OpenReadStream()))
+                        IUsers users = new UsersRepository(db);
+                        User user = new User
                         {
-                            imageData = stream.ReadBytes((int)userVM.PfpFile.Length);
+                            Name = userRegisterVM.Name,
+                            Surname = userRegisterVM.Surname,
+                            Password = userRegisterVM.Password,
+                            Email = userRegisterVM.Email,
+                            BirthDate = userRegisterVM.BirthDate,
+                            Country = userRegisterVM.Country,
+                            Phone = userRegisterVM.Phone,
+                            HomeAdress = userRegisterVM.HomeAdress
+                        };
+
+                        byte[] imageData;
+                        if (userRegisterVM.PfpFile != null)
+                        {
+                            using (var stream = new BinaryReader(userRegisterVM.PfpFile.OpenReadStream()))
+                            {
+                                imageData = stream.ReadBytes((int)userRegisterVM.PfpFile.Length);
+                            }
                         }
-                    }
-                    else
-                    {
-                        string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\images") + "\\default_user.png";
-                        imageData = System.IO.File.ReadAllBytes(path);
-                    }
-                    user.ProfilePicture = imageData;
+                        else
+                        {
+                            string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\images") + "\\default_user.png";
+                            imageData = System.IO.File.ReadAllBytes(path);
+                        }
+                        user.ProfilePicture = imageData;
 
-                    userVMloc.User = user;
-                    CurrentUser = user;
-                    users.Create(user);
-                    users.Save();
+                        users.Create(user);
+                        users.Save();
 
-                    return RedirectToAction("Profile", "User", new { user.UserUrlId });
+                        var claims = new List<Claim> 
+                        { 
+                            new Claim(ClaimTypes.Name, user.Email),
+                            new Claim(ClaimTypes.Role, "Client")
+                        };
+                        ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+                        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                        HttpContext.User = claimsPrincipal;
+                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+
+                        return RedirectToAction("Profile", "User");
+                    }
                 }
-                //}
-                //else
-                //{
-                //    return RedirectToAction("Register", "User", new { error = "Заполненные данные не верны" });
-                //}
+                else
+                {
+                    return RedirectToAction("Register", "User", new { error = "Пароли должны совпадать" });
+                }
             }
             else
             {
-                return RedirectToAction("Register", "User", new { error = "Пароли должны совпадать" });
+                var errors = ModelState.Where(x => x.Value.Errors.Any()).Select(x => new {x.Key, x.Value.Errors});
+                foreach(var error in errors) 
+                {
+                    logger.LogError(error.Errors.FirstOrDefault().ErrorMessage);
+                }
+                return RedirectToAction("Register", "User", new { error = "Заполненные данные не верны" });
             }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login", "User");
         }
     }
 }

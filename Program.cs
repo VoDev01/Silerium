@@ -1,7 +1,7 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Silerium.Controllers;
 using Silerium.Data;
-using Silerium.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,8 +12,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
     builder.Configuration.GetConnectionString("Default")
     ));
 
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options => { options.LoginPath = "/User/Login"; });
+
 builder.Services.AddLogging(logger => logger.AddConsole());
 builder.Services.AddSingleton<Logger<AdminController>>();
+builder.Services.AddSingleton<Logger<UserController>>();
+builder.Services.AddSingleton<Logger<CatalogController>>();
 
 var app = builder.Build();
 
