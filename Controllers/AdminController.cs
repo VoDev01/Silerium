@@ -345,7 +345,7 @@ namespace Silerium.Controllers
                     }
                     else
                     {
-                        if (products.FindSetByCondition(p => p.Page.Id == CatalogController.CurrentPageIndex).Count() > CatalogController.ProductsAtPage)
+                        if (products.FindSetByCondition(p => p.Page.Id == CatalogController.CurrentPageIndex).Count() > CatalogController.productsAtPage)
                             productVM.Product.Page = new Page { Products = new List<Product>() { productVM.Product } };
                         else
                             productVM.Product.Page = pages.GetByID(CatalogController.CurrentPageIndex);

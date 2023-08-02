@@ -31,27 +31,27 @@ namespace Silerium.Middlewares
 
                 switch (httpContext.Request.Query["sort_order"])
                 {
-                    case nameof(Models.Query.SortOrder.NAME_DESC):
+                    case nameof(ViewModels.SortOrder.NAME_DESC):
                         _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
                     .OrderByDescending(p => p.Name).ToList();
                         break;
-                    case nameof(Models.Query.SortOrder.NAME_ASC):
+                    case nameof(ViewModels.SortOrder.NAME_ASC):
                         _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
                     .OrderBy(p => p.Name).ToList();
                         break;
-                    case nameof(Models.Query.SortOrder.POP_DESC):
+                    case nameof(ViewModels.SortOrder.POP_DESC):
                         _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Include(p => p.Orders).Where(p => p.Page.Id == page)
                     .OrderByDescending(p => p.Orders.Count()).ToList();
                         break;
-                    case nameof(Models.Query.SortOrder.POP_ASC):
+                    case nameof(ViewModels.SortOrder.POP_ASC):
                         _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Include(p => p.Orders).Where(p => p.Page.Id == page)
                     .OrderBy(p => p.Orders.Count()).ToList();
                         break;
-                    case nameof(Models.Query.SortOrder.PRICE_DESC):
+                    case nameof(ViewModels.SortOrder.PRICE_DESC):
                         _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
                     .OrderByDescending(p => p.PriceRub).ToList();
                         break;
-                    case nameof(Models.Query.SortOrder.PRICE_ASC):
+                    case nameof(ViewModels.SortOrder.PRICE_ASC):
                         _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
                     .OrderBy(p => p.PriceRub).ToList();
                         break;
