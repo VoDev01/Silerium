@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Silerium.Controllers;
 using Silerium.Data;
+using Silerium.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 

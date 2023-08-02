@@ -13,7 +13,10 @@
             {
                 <img class="subcategory-image" src="@subcategory.Image" alt="@subcategory.Name">
             }
-            <a class="text-decoration-none" asp-action="Products" asp-controller="Catalog" asp-route-subcategory="@subcategory.Name.ToLower()">@subcategory.Name</a>
+            <a class="text-decoration-none" asp-action="Products" asp-controller="Catalog" 
+            asp-route-subcategory_name="@subcategory.Name.ToLower()"
+           asp-route-category_name="@Model.Name.ToLower()"
+           asp-route-sort_order="NAME_DESC">@subcategory.Name</a>
         </div>
     }
 </div>
