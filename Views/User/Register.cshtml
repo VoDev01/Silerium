@@ -1,0 +1,62 @@
+﻿@model Silerium.ViewModels.UserViewModel
+@{
+    ViewData["title"] = "Регистрация";
+}
+@section Scripts
+    {
+        <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+        <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}
+
+<h2 class="text-center">Регистрация</h2>
+<div class="container border w-50">
+    <form asp-action="Register" asp-controller="User" enctype="multipart/form-data">
+        <div class="mb-3 mt-2">
+            <label class="form-label" asp-for="User.NickName">Логин</label>
+            <input class="form-control" type="text" asp-for="User.NickName" />
+            <span asp-validation-for="User.NickName" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="User.Email">Email</label>
+            <input class="form-control" type="email" asp-for="User.Email" />
+            <span asp-validation-for="User.Email" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="User.Name">Имя</label>
+            <input class="form-control" type="text" asp-for="User.Name" />
+            <span asp-validation-for="User.Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="User.Surname">Фамилия</label>
+            <input class="form-control" type="text" asp-for="User.Surname" />
+            <span asp-validation-for="User.Surname" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="User.Password">Пароль</label>
+            <input class="form-control" type="password" asp-for="User.Password" />
+            <span asp-validation-for="User.Password" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="password_repeat">Повторите пароль</label>
+            <input class="form-control" type="password" id="password_repeat" name="password_repeat" />
+            @if (ViewData.ModelState["ServerError"] != null)
+            {
+                    <span class="text-danger">@ViewData.ModelState["ServerError"].Errors.FirstOrDefault().ErrorMessage</span>
+            }
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="User.BirthDate">День рождения</label>
+            <input class="form-control" type="date" asp-for="User.BirthDate" />
+            <span asp-validation-for="User.BirthDate" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="country">Страна проживания</label>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="PfpFile">Картинка профиля</label>
+            <input class="form-control" type="file" asp-for="PfpFile" />
+            <span asp-validation-for="PfpFile" class="text-danger"></span>
+        </div>
+        <button class="btn btn-outline-primary mb-3" type="submit">Зарегистрироваться</button>
+    </form>
+</div>
