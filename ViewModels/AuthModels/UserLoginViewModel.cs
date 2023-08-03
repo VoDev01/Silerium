@@ -11,5 +11,6 @@ namespace Silerium.ViewModels.AuthModels
         [MaxLength(50)]
         [Required]
         public string Password { get; set; }
+        public string? ReturnUrl { get; set; }
     }
 }

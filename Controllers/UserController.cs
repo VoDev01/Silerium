@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
@@ -25,6 +26,7 @@ namespace Silerium.Controllers
                 .Build();
             connectionString = configuration.GetConnectionString("Default");
         }
+        [Authorize]
         public IActionResult EditProfile()
         {
             using (var db = new ApplicationDbContext(connectionString))
@@ -44,9 +46,7 @@ namespace Silerium.Controllers
             {
                 IUsers users = new UsersRepository(db);
 
-                User? user = null;
-                string userEmail = HttpContext.User.Identity.Name;
-                user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                User? user = userVM.User;
                 user.Name = userVM.User.Name == string.Empty ? user.Name : userVM.User.Name;
                 user.Surname = userVM.User.Surname == string.Empty ? user.Surname : userVM.User.Surname;
                 user.Email = userVM.User.Email == string.Empty ? user.Email : userVM.User.Email;
@@ -70,6 +70,7 @@ namespace Silerium.Controllers
             }
         }
         [Route("User/Profile")]
+        [Authorize]
         //Get the profile page of the specified user
         public IActionResult Profile()
         {
@@ -80,7 +81,7 @@ namespace Silerium.Controllers
                     IUsers users = new UsersRepository(db);
                     UserViewModel userVM = new UserViewModel();
                     User? user = null;
-                    string userEmail = HttpContext.User.Identity.Name;
+                    string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
                     user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
                     if (user != null)
                         userVM.User = user;
@@ -125,7 +126,8 @@ namespace Silerium.Controllers
 
                 if (user == null)
                 {
-                    UserLoginViewModel userLoginVM = new UserLoginViewModel();
+                    UserLoginViewModel userLoginVM = new UserLoginViewModel { ReturnUrl = HttpContext.Request.Query.
+                        Where(q => q.Key == "ReturnUrl").Select(q => q.Value).First() };
                     return View(userLoginVM);
                 }
                 else
@@ -136,7 +138,7 @@ namespace Silerium.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("User/Login")]
-        public async Task<IActionResult> Login(UserLoginViewModel userLoginVM)
+        public async Task<IActionResult> Login(UserLoginViewModel userLoginVM, string? returnUrl)
         {
             if (ModelState.IsValid)
             {
@@ -156,9 +158,16 @@ namespace Silerium.Controllers
                         };
                         ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "Cookies");
                         ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-                        HttpContext.User = claimsPrincipal;
                         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
-                        return RedirectToAction("Profile", "User");
+                        if (Url.IsLocalUrl(returnUrl))
+                        {
+                            return Redirect(returnUrl ?? "/");
+                        }
+                        else
+                        {
+                            logger.LogError($"An attempt of Open Redirect attack with {returnUrl} URL adress.");
+                            return RedirectToAction("Index", "Home");
+                        }
                     }
                     else
                     {
@@ -188,20 +197,20 @@ namespace Silerium.Controllers
         }
 
         [Route("User/Register")]
-        public IActionResult Register(string? error = null)
+        public IActionResult Register(string? returnUrl, string? error = null)
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 if (error != null)
                     ModelState.AddModelError("ServerError", error);
-                return View(new UserRegisterViewModel());
+                return View(new UserRegisterViewModel { ReturnUrl = returnUrl});
             }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("User/Register")]
-        public async Task<IActionResult> Register(UserRegisterViewModel userRegisterVM)
+        public async Task<IActionResult> Register(UserRegisterViewModel userRegisterVM, string? returnUrl)
         {
             if (ModelState.IsValid)
             {
@@ -247,10 +256,16 @@ namespace Silerium.Controllers
                         };
                         ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "Cookies");
                         ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-                        HttpContext.User = claimsPrincipal;
                         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
-
-                        return RedirectToAction("Profile", "User");
+                        if (Url.IsLocalUrl(returnUrl))
+                        {
+                            return Redirect(returnUrl ?? "/");
+                        }
+                        else
+                        {
+                            logger.LogError($"An attempt of Open Redirect attack with {returnUrl} URL adress.");
+                            return RedirectToAction("Index", "Home");
+                        }
                     }
                 }
                 else

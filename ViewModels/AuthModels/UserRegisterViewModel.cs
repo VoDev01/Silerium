@@ -28,5 +28,6 @@ namespace Silerium.ViewModels.AuthModels
         [RegularExpression("^\\(?([0-9]{3})\\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$")]
         public string? Phone { get; set; }
         public IFormFile? PfpFile { get; set; }
+        public string? ReturnUrl { get; set; }
     }
 }

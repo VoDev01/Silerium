@@ -64,6 +64,7 @@
             <input class="form-control" type="file" asp-for="PfpFile" />
             <span asp-validation-for="PfpFile" class="text-danger"></span>
         </div>
+        <input hidden name="returnUrl" value="@Model.ReturnUrl"/>
         <button class="btn btn-outline-primary mb-3" type="submit">Зарегистрироваться</button>
     </form>
 </div>
