@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,10 @@ using Silerium.Models.Interfaces;
 using Silerium.Models.Repositories;
 using Silerium.ViewModels;
 using Silerium.ViewModels.AuthModels;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace Silerium.Controllers
 {
@@ -72,7 +76,7 @@ namespace Silerium.Controllers
         [Route("User/Profile")]
         [Authorize]
         //Get the profile page of the specified user
-        public IActionResult Profile()
+        public IActionResult Profile(string? t)
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
@@ -114,41 +118,40 @@ namespace Silerium.Controllers
             }
         }
         [Route("User/Login")]
-        public IActionResult Login()
+        public IActionResult Login(string? t = null)
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IUsers users = new UsersRepository(db);
                 UserViewModel userVM = new UserViewModel();
-                User? user = null;
-                string userEmail = HttpContext.User.Identity.Name;
-                user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
 
-                if (user == null)
+                if (t == null)
                 {
-                    UserLoginViewModel userLoginVM = new UserLoginViewModel { ReturnUrl = HttpContext.Request.Query.
-                        Where(q => q.Key == "ReturnUrl").Select(q => q.Value).First() };
+                    UserLoginViewModel userLoginVM = new UserLoginViewModel
+                    {
+                        ReturnUrl = "/User/Profile" //HttpContext.Request.Query.Where(q => q.Key == "ReturnUrl").Select(q => q.Value).First()
+                    };
                     return View(userLoginVM);
                 }
                 else
-                    return RedirectToAction("Profile");
+                    return RedirectToAction("Profile", new { t });
             }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("User/Login")]
-        public async Task<IActionResult> Login(UserLoginViewModel userLoginVM, string? returnUrl)
+        public async Task<IActionResult> Login(UserLoginViewModel userLoginVM, string? t, string? returnUrl, bool remember)
         {
             if (ModelState.IsValid)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     IUsers users = new UsersRepository(db);
-                    User? user = users.GetAllWithInclude(u => u.Orders).Where(
-                        u => u.Name == u.Name &&
-                        u.Password == userLoginVM.Password &&
-                        u.Email == userLoginVM.Email).FirstOrDefault();
+                    User? user = users.GetAllWithInclude(u => u.Orders).Where(u => 
+                        u.Email == userLoginVM.Email &&
+                        u.Password == userLoginVM.Password).FirstOrDefault();
+
                     if (user != null)
                     {
                         var claims = new List<Claim>
@@ -156,35 +159,72 @@ namespace Silerium.Controllers
                             new Claim(ClaimTypes.Name, user.Email),
                             new Claim(ClaimTypes.Role, "Client")
                         };
-                        ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+                        ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                         ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
-                        if (Url.IsLocalUrl(returnUrl))
+
+                        if (remember) //Use cookies authorization
                         {
-                            return Redirect(returnUrl ?? "/");
+                            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+                            if (Url.IsLocalUrl(returnUrl))
+                            {
+                                return Redirect(returnUrl ?? "/");
+                            }
+                            else
+                            {
+                                logger.LogError($"An attempt of Open Redirect attack with {returnUrl} URL adress.");
+                                return RedirectToAction("Index", "Home");
+                            }
                         }
-                        else
+                        else //Use jwt-tokens
                         {
-                            logger.LogError($"An attempt of Open Redirect attack with {returnUrl} URL adress.");
-                            return RedirectToAction("Index", "Home");
+                            claimsIdentity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme);
+                            claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                            SecurityToken jwt;
+                            if (t != null)
+                                jwt = new JwtSecurityTokenHandler().ReadToken(t);
+                            else
+                                jwt = new JwtSecurityToken(
+                                issuer: JWTAuthOptions.ISSUER,
+                                audience: JWTAuthOptions.AUDIENCE,
+                                claims: claims,
+                                expires: DateTime.UtcNow.AddMinutes(1),
+                                signingCredentials: new SigningCredentials(JWTAuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
+                                );
+
+                            QueryBuilder queryBuilder = new QueryBuilder
+                            {
+                                { "t", new JwtSecurityTokenHandler().WriteToken(jwt) }
+                            };
+                            UriBuilder uriBuilder = new UriBuilder { Path = returnUrl, Query = queryBuilder.ToString() };
+                            string localUrl = uriBuilder.Uri.PathAndQuery.Substring(uriBuilder.Uri.PathAndQuery.IndexOf("/User/"));
+
+                            if (Url.IsLocalUrl(localUrl))
+                            {
+                                return Redirect(localUrl ?? "/");
+                            }
+                            else
+                            {
+                                logger.LogError($"An attempt of Open Redirect attack with {returnUrl} URL adress.");
+                                return RedirectToAction("Index", "Home");
+                            }
                         }
                     }
                     else
                     {
                         if (users.FindSetByCondition(u => u.Password == userLoginVM.Password).Count() == 0)
                         {
-                            ModelState.AddModelError("Wrong Password", "Неверный пароль");
-                            return View();
+                            TempData["Wrong Password"] = "Неверный пароль";
+                            return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                         }
                         else if (users.FindSetByCondition(u => u.Email == userLoginVM.Email).Count() == 0)
                         {
-                            ModelState.AddModelError("Wrong Email", "Неверный email");
-                            return View();
+                            TempData["Wrong Email"] = "Неверный email";
+                            return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                         }
                         else
                         {
-                            ModelState.AddModelError("User not found", "Такого профиля не существует. Зарегистрируйтесь и создайте новый.");
-                            return View();
+                            TempData["User not found"] = "Такого профиля не существует. Зарегистрируйтесь и создайте новый.";
+                            return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                         }
                     }
                 }
@@ -203,7 +243,7 @@ namespace Silerium.Controllers
             {
                 if (error != null)
                     ModelState.AddModelError("ServerError", error);
-                return View(new UserRegisterViewModel { ReturnUrl = returnUrl});
+                return View(new UserRegisterViewModel { ReturnUrl = returnUrl });
             }
         }
 
@@ -214,7 +254,7 @@ namespace Silerium.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (userRegisterVM.ConfirmPassword == userRegisterVM.Password)
+                if (userRegisterVM.Password == userRegisterVM.ConfirmPassword)
                 {
                     using (var db = new ApplicationDbContext(connectionString))
                     {
@@ -249,17 +289,29 @@ namespace Silerium.Controllers
                         users.Create(user);
                         users.Save();
 
-                        var claims = new List<Claim> 
-                        { 
+                        var claims = new List<Claim>
+                        {
                             new Claim(ClaimTypes.Name, user.Email),
                             new Claim(ClaimTypes.Role, "Client")
                         };
-                        ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "Cookies");
-                        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
-                        if (Url.IsLocalUrl(returnUrl))
+
+                        var jwt = new JwtSecurityToken(
+                                issuer: JWTAuthOptions.ISSUER,
+                                audience: JWTAuthOptions.AUDIENCE,
+                                claims: claims,
+                                expires: DateTime.UtcNow.AddMinutes(1),
+                                signingCredentials: new SigningCredentials(JWTAuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
+                                );
+                        QueryBuilder queryBuilder = new QueryBuilder
                         {
-                            return Redirect(returnUrl ?? "/");
+                            { "t", new JwtSecurityTokenHandler().WriteToken(jwt) }
+                        };
+                        UriBuilder uriBuilder = new UriBuilder { Path = returnUrl, Query = queryBuilder.ToString() };
+                        string localUrl = uriBuilder.Uri.PathAndQuery.Substring(uriBuilder.Uri.PathAndQuery.IndexOf("/User/"));
+                        if (Url.IsLocalUrl(localUrl))
+                        {
+                            
+                            return Redirect(localUrl ?? "/");
                         }
                         else
                         {
@@ -275,8 +327,8 @@ namespace Silerium.Controllers
             }
             else
             {
-                var errors = ModelState.Where(x => x.Value.Errors.Any()).Select(x => new {x.Key, x.Value.Errors});
-                foreach(var error in errors) 
+                var errors = ModelState.Where(x => x.Value.Errors.Any()).Select(x => new { x.Key, x.Value.Errors });
+                foreach (var error in errors)
                 {
                     logger.LogError(error.Errors.FirstOrDefault().ErrorMessage);
                 }
@@ -287,6 +339,7 @@ namespace Silerium.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
+            await HttpContext.SignOutAsync(JwtBearerDefaults.AuthenticationScheme);
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "User");
         }

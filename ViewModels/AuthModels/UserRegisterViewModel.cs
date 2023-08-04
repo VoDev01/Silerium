@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace Silerium.ViewModels.AuthModels
 {
@@ -11,6 +12,7 @@ namespace Silerium.ViewModels.AuthModels
         public string? Surname { get; set; }
         [MaxLength(75)]
         [Required]
+        [Remote("CheckEmail", "User", ErrorMessage = "Данный email уже кем-то используется")]
         public string Email { get; set; }
         [MaxLength(50)]
         [Required]
