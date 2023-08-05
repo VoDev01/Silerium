@@ -173,7 +173,7 @@ namespace Silerium.Controllers
                                 return RedirectToAction("Index", "Home");
                             }
                         }
-                        else //Use jwt-tokens authentication
+                        else //Use jwt authentication
                         {
                             claimsIdentity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme);
                             string? token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
@@ -298,13 +298,47 @@ namespace Silerium.Controllers
                 return RedirectToAction("Register", "User", new { error = "Заполненные данные не верны" });
             }
         }
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(JwtBearerDefaults.AuthenticationScheme);
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IUsers users = new UsersRepository(db);
+                string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
+                User user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                UserViewModel userVM = new UserViewModel { User = user };
+                return View(userVM);
+            }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> LogoutPost()
+        {
+            HttpContext.Session.Remove("access_token");
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login", "User");
+            return RedirectToAction("Index", "Home");
+        }
+        public IActionResult ShopCart()
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IUsers users = new UsersRepository(db);
+                string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
+                UserViewModel userVM = new UserViewModel { User = users.GetAllWithInclude(u => u.Orders).Where(u => u.Email == userEmail).FirstOrDefault() };
+                return View(userVM);
+            }
+        }
+        public IActionResult CheckoutOrder()
+        {
+            return View();
+        }
+        public IActionResult EditOrder()
+        {
+            return View();
+        }
+        public IActionResult DeleteOrder()
+        {
+            return View();
         }
     }
 }

@@ -4,7 +4,7 @@
     ViewData["Title"] = Model.Product.Name;
 }
 
-<div>
+<div class="container" style="width: 650px;">
     <h1>@Model.Product.Name</h1>
     <div id="productCarousel" class="carousel slide carousel-fade w-100 d-md-block d-none" data-bs-ride="carousel">
         <div class="carousel-indicators bg-opacity-25 bg-black mx-auto" style="width: 150px;">
@@ -40,17 +40,20 @@
     </div>
     <p>Цена в рублях: @Model.Product.PriceRub &#8381;</p>
     <div class="row">
-        <div class="col-4">
+        <div class="col-3">
             <p>Количество - @Model.Product.StockAmount шт.</p>
         </div>
         @{
             string available = Model.Product.Available ? "Да" : "Нет";
         }
-        <div class="col-4">
+        <div class="col-3">
             <p>Можно купить - @available</p>
         </div>
-        <div class="col-4">
-            <a class="btn btn-success" href="#">Купить</a>
+        <div class="col-3">
+            <a class="btn btn-success" asp-action="AddToCart" asp-controller="Catalog" asp-route-id="@Model.Product.Id">Добавить в корзину</a>
+        </div>
+        <div class="col-3">
+            <a class="btn btn-success" asp-action="CheckoutOrder" asp-controller="User">Купить сразу</a>
         </div>
     </div>
 </div>

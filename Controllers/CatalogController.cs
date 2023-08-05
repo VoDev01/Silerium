@@ -8,6 +8,7 @@ using Silerium.Models.Interfaces;
 using Silerium.Models.Query;
 using Silerium.Models.Repositories;
 using Silerium.ViewModels;
+using System.Security.Claims;
 
 namespace Silerium.Controllers
 {
@@ -138,6 +139,45 @@ namespace Silerium.Controllers
                 filter = true,
                 page
             });
+        }
+        public IActionResult AddToCart(int id)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IProducts products = new ProductsRepository(db);
+                ProductViewModel productVM = new ProductViewModel 
+                { 
+                    Product = products.GetAllWithInclude(p => p.Images).Include(p => p.Subcategory).Where(p => p.Id == id).FirstOrDefault()
+                };
+                return View(productVM);
+            }
+        }
+        [HttpPost]
+        public IActionResult AddToCartPost(ProductViewModel productVM, int amount) 
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IOrders orders = new OrdersRepository(db); 
+                IUsers users = new UsersRepository(db);
+                string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
+                User? user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                if (user != null)
+                {
+                    orders.Create(new Order
+                    {
+                        Product = productVM.Product,
+                        OrderAmount = amount,
+                        OrderDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                        User = user
+                    });
+                    orders.Save();
+                    return RedirectToAction("Categories", "Index");
+                }
+                else
+                {
+                    return Unauthorized();
+                }
+            }
         }
     }
 }

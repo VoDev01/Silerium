@@ -2,7 +2,7 @@
 @{
     ViewData["title"] = "Профиль";
 }
-<div class="container border w-75">
+<div class="container w-75">
     <form class="row flex-column" asp-action="EditProfile" asp-controller="User" enctype="multipart/form-data">
         <div class="col-4 w-100">
             <img alt="Картинка профиля" src="data:image;base64,@(Convert.ToBase64String(Model.User.ProfilePicture))" width="168" height="168" />
@@ -29,15 +29,28 @@
                 <span asp-validation-for="User.Email" class="text-danger"></span>
             </div>
             <div class="mb-3">
+                <label class="form-label" asp-for="User.Phone">Новый номер телефона</label>
+                <input class="form-control" type="text" asp-for="User.Phone" />
+                <span asp-validation-for="User.Phone" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
                 <label class="form-label" asp-for="User.BirthDate">Новая дата дня рождения</label>
                 <input class="form-control" type="date" asp-for="User.BirthDate" placeholder="@DateOnly.FromDateTime((DateTime)Model.User.BirthDate).ToString()" />
                 <span asp-validation-for="User.BirthDate" class="text-danger"></span>
             </div>
             <div class="mb-3">
-                <label class="form-label" for="country">Новая страна проживания</label>
+                <label class="form-label" asp-for="User.Country">Новая страна проживания</label>
+                <input class="form-control" type="text" asp-for="User.Country" />
+                <span asp-validation-for="User.Country" class="text-danger"></span>
+            </div>
+            <div>
+                <label class="form-label" asp-for="User.HomeAdress">Новый адрес доставки</label>
+                <input class="form-control" type="text" asp-for="User.HomeAdress" />
+                <span asp-validation-for="User.HomeAdress" class="text-danger"></span>
             </div>
             <div class="row justify-content-center mb-3">
                 <a class="btn btn-outline-danger mb-3 col-4" asp-action="Profile" asp-controller="User">Отменить редактирование</a>
+                <div class="col-2"></div>
                 <button class="btn btn-outline-primary mb-3 col-4" type="submit">Редактировать</button>
             </div>
         </div>

@@ -21,6 +21,13 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-end">
                     <div class="navbar-nav">
+                        @if (this.User.Identity.IsAuthenticated)
+                        {
+                            <a class="nav-item nav-link text-black text-decoration-none" asp-controller="User" asp-action="ShopCart">
+                                Корзина
+                                <i class="bi bi-cart"></i>
+                            </a>
+                        }
                         <a class="nav-item nav-link text-black text-decoration-none" asp-controller="User" asp-action="Profile">
                             Личный кабинет
                             <i class="bi bi-box-arrow-in-right"></i>
