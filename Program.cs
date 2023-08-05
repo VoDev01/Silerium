@@ -5,12 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using Silerium.Controllers;
 using Silerium.Data;
 using Silerium;
-using System.Net;
+using Silerium.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddSession();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("Default")
@@ -39,6 +41,9 @@ builder.Services.AddSingleton<Logger<CatalogController>>();
 
 var app = builder.Build();
 
+app.UseSession();
+app.UseJWTAuthorizationMiddleware();
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -53,18 +58,8 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
-//app.UseStatusCodePages(async context =>
-//{
-//    var response = context.HttpContext.Response;
-//    var request = context.HttpContext.Request;
-
-//    if (response.StatusCode == (int)HttpStatusCode.Unauthorized ||
-//        response.StatusCode == (int)HttpStatusCode.Forbidden)
-//        response.Redirect("/User/Login?ReturnUrl=/User/Profile");
-//    else
-//        response.Redirect(request.Path.Value);
-//});
 app.UseAuthorization();
+
 
 app.MapControllerRoute(
     name: "default",

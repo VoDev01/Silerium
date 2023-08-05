@@ -14,6 +14,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Http.Extensions;
+using System.Net;
+using Microsoft.AspNetCore.Http;
 
 namespace Silerium.Controllers
 {
@@ -74,10 +76,10 @@ namespace Silerium.Controllers
             }
         }
         [Route("User/Profile")]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         //Get the profile page of the specified user
-        public IActionResult Profile(string? t)
-        {
+        public IActionResult Profile()
+        {   
             using (var db = new ApplicationDbContext(connectionString))
             {
                 try
@@ -91,8 +93,8 @@ namespace Silerium.Controllers
                         userVM.User = user;
                     else
                     {
-                        logger.LogError("User was not authenticated");
-                        return RedirectToAction("Error", "Home");
+                        logger.LogError($"User with access token {HttpContext.Session.GetString("access_token")} was not authorized");
+                        return Unauthorized();
                     }
                     return View(userVM);
                 }
@@ -118,30 +120,24 @@ namespace Silerium.Controllers
             }
         }
         [Route("User/Login")]
-        public IActionResult Login(string? t = null)
+        public IActionResult Login()
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IUsers users = new UsersRepository(db);
                 UserViewModel userVM = new UserViewModel();
-
-                if (t == null)
+                UserLoginViewModel userLoginVM = new UserLoginViewModel
                 {
-                    UserLoginViewModel userLoginVM = new UserLoginViewModel
-                    {
-                        ReturnUrl = "/User/Profile" //HttpContext.Request.Query.Where(q => q.Key == "ReturnUrl").Select(q => q.Value).First()
-                    };
-                    return View(userLoginVM);
-                }
-                else
-                    return RedirectToAction("Profile", new { t });
+                    ReturnUrl = "/User/Profile"
+                };
+                return View(userLoginVM);
             }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("User/Login")]
-        public async Task<IActionResult> Login(UserLoginViewModel userLoginVM, string? t, string? returnUrl, bool remember)
+        public async Task<IActionResult> Login(UserLoginViewModel userLoginVM, string? returnUrl, bool remember)
         {
             if (ModelState.IsValid)
             {
@@ -151,19 +147,21 @@ namespace Silerium.Controllers
                     User? user = users.GetAllWithInclude(u => u.Orders).Where(u => 
                         u.Email == userLoginVM.Email &&
                         u.Password == userLoginVM.Password).FirstOrDefault();
-
                     if (user != null)
                     {
+                        SecurityToken jwt;
                         var claims = new List<Claim>
                         {
                             new Claim(ClaimTypes.Name, user.Email),
                             new Claim(ClaimTypes.Role, "Client")
                         };
-                        ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                        ClaimsIdentity claimsIdentity;
+                        ClaimsPrincipal claimsPrincipal;
 
-                        if (remember) //Use cookies authorization
+                        if (remember) //Use cookies authentication
                         {
+                            claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                            claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
                             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
                             if (Url.IsLocalUrl(returnUrl))
                             {
@@ -175,13 +173,12 @@ namespace Silerium.Controllers
                                 return RedirectToAction("Index", "Home");
                             }
                         }
-                        else //Use jwt-tokens
+                        else //Use jwt-tokens authentication
                         {
                             claimsIdentity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme);
-                            claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-                            SecurityToken jwt;
-                            if (t != null)
-                                jwt = new JwtSecurityTokenHandler().ReadToken(t);
+                            string? token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                            if (token != null)
+                                jwt = new JwtSecurityTokenHandler().ReadToken(token);
                             else
                                 jwt = new JwtSecurityToken(
                                 issuer: JWTAuthOptions.ISSUER,
@@ -191,16 +188,10 @@ namespace Silerium.Controllers
                                 signingCredentials: new SigningCredentials(JWTAuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
                                 );
 
-                            QueryBuilder queryBuilder = new QueryBuilder
+                            if (Url.IsLocalUrl(returnUrl))
                             {
-                                { "t", new JwtSecurityTokenHandler().WriteToken(jwt) }
-                            };
-                            UriBuilder uriBuilder = new UriBuilder { Path = returnUrl, Query = queryBuilder.ToString() };
-                            string localUrl = uriBuilder.Uri.PathAndQuery.Substring(uriBuilder.Uri.PathAndQuery.IndexOf("/User/"));
-
-                            if (Url.IsLocalUrl(localUrl))
-                            {
-                                return Redirect(localUrl ?? "/");
+                                HttpContext.Session.SetString("access_token", new JwtSecurityTokenHandler().WriteToken(jwt));
+                                return Redirect(returnUrl ?? "/");
                             }
                             else
                             {
@@ -250,7 +241,7 @@ namespace Silerium.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("User/Register")]
-        public async Task<IActionResult> Register(UserRegisterViewModel userRegisterVM, string? returnUrl)
+        public async Task<IActionResult> Register(UserRegisterViewModel userRegisterVM, string returnUrl)
         {
             if (ModelState.IsValid)
             {
@@ -289,35 +280,7 @@ namespace Silerium.Controllers
                         users.Create(user);
                         users.Save();
 
-                        var claims = new List<Claim>
-                        {
-                            new Claim(ClaimTypes.Name, user.Email),
-                            new Claim(ClaimTypes.Role, "Client")
-                        };
-
-                        var jwt = new JwtSecurityToken(
-                                issuer: JWTAuthOptions.ISSUER,
-                                audience: JWTAuthOptions.AUDIENCE,
-                                claims: claims,
-                                expires: DateTime.UtcNow.AddMinutes(1),
-                                signingCredentials: new SigningCredentials(JWTAuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
-                                );
-                        QueryBuilder queryBuilder = new QueryBuilder
-                        {
-                            { "t", new JwtSecurityTokenHandler().WriteToken(jwt) }
-                        };
-                        UriBuilder uriBuilder = new UriBuilder { Path = returnUrl, Query = queryBuilder.ToString() };
-                        string localUrl = uriBuilder.Uri.PathAndQuery.Substring(uriBuilder.Uri.PathAndQuery.IndexOf("/User/"));
-                        if (Url.IsLocalUrl(localUrl))
-                        {
-                            
-                            return Redirect(localUrl ?? "/");
-                        }
-                        else
-                        {
-                            logger.LogError($"An attempt of Open Redirect attack with {returnUrl} URL adress.");
-                            return RedirectToAction("Index", "Home");
-                        }
+                        return RedirectToAction("Login", "User", new { returnUrl });
                     }
                 }
                 else

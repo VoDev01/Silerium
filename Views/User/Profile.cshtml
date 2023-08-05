@@ -4,7 +4,7 @@
     ViewData["title"] = "Профиль";
 }
 <div class="container">
-    <div class="row">
+    <div class="row mb-3">
         <div class="col-2">
             <img alt="Картинка профиля" src="data:image;base64,@(Convert.ToBase64String(Model.User.ProfilePicture))" width="168" height="168" />
         </div>
@@ -15,9 +15,18 @@
             {
                 <p>День рождения: @DateOnly.FromDateTime((DateTime)Model.User.BirthDate).ToString()</p>
             }
+            <p>Номер телефона: @Model.User.Phone</p>
             <p>Страна проживания: @Model.User.Country</p>
+            @if (Model.User.HomeAdress == null)
+            {
+                <p>Адрес доставки: Не указан</p>
+            }
+            else
+            {
+                <p>Адрес доставки: @Model.User.HomeAdress</p>
+            }
         </div>
     </div>
-    <a class="text-secondary text-decoration-none" asp-action="EditProfile" asp-controller="User">Редактировать профиль</a>
-    <a class="text-secondary text-decoration-none" asp-action="Logout" asp-controller="User">Выйти из профиля</a>
+    <a class="btn btn-secondary text-decoration-none" asp-action="EditProfile" asp-controller="User">Редактировать профиль</a>
+    <a class="btn btn-danger text-decoration-none" asp-action="Logout" asp-controller="User">Выйти из профиля</a>
 </div>
