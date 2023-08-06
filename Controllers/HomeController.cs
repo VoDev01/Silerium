@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SileriumDirectory.Models;
 using System.Diagnostics;
 
@@ -12,7 +14,6 @@ namespace SileriumDirectory.Controllers
         {
             _logger = logger;
         }
-
         public IActionResult Index()
         {
             return View();

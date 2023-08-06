@@ -4,20 +4,41 @@
     ViewData["title"] = "Профиль";
 }
 <div class="container">
-    <div class="row">
+    <div class="row mb-3">
         <div class="col-2">
-            <img alt="Картинка профиля @Model.User.NickName" src="data:image;base64,@(Convert.ToBase64String(Model.User.ProfilePicture))" width="168" height="168" />
+            <img alt="Картинка профиля" src="data:image;base64,@(Convert.ToBase64String(Model.User.ProfilePicture))" width="168" height="168" />
         </div>
         <div class="col-10">
-            <h2>@Model.User.NickName</h2>
             <h3>Имя: @Model.User.Name</h3>
             <h3>Фамилия: @Model.User.Surname</h3>
             @if (Model.User.BirthDate != null)
             {
                 <p>День рождения: @DateOnly.FromDateTime((DateTime)Model.User.BirthDate).ToString()</p>
             }
+            <p>Номер телефона: @Model.User.Phone</p>
             <p>Страна проживания: @Model.User.Country</p>
+            @if (Model.User.HomeAdress == null)
+            {
+                <p>Адрес доставки: Не указан</p>
+            }
+            else
+            {
+                <p>Адрес доставки: @Model.User.HomeAdress</p>
+            }
         </div>
     </div>
-    <a class="text-secondary text-decoration-none" asp-action="EditProfile" asp-controller="User">Редактировать профиль</a>
+    <style>
+        #logout 
+        {
+            color: #dc3545;
+        }
+        #logout:hover
+        {
+            color: white;
+        }
+    </style>
+    <form class="form-inline" asp-action="Logout" asp-controller="User">
+        <a class="btn btn-outline-secondary text-decoration-none" asp-action="EditProfile" asp-controller="User">Редактировать профиль</a>
+        <button type="submit" class="btn btn-link btn-outline-danger text-decoration-none" id="logout">Выйти из профиля</button>
+    </form>
 </div>

@@ -1,4 +1,4 @@
-﻿@model Silerium.ViewModels.UserLoginViewModel
+﻿@model Silerium.ViewModels.AuthModels.UserLoginViewModel
 @{
     ViewData["title"] = "Вход в профиль";
 }
@@ -9,17 +9,12 @@
 }
 
 <h2 class="text-center">Вход</h2>
-<div class="container border w-50">
+<div class="container w-50">
     <form asp-action="Login" asp-controller="User">
-        <div class="mb-3 mt-2">
-            <label class="form-label" asp-for="Login">Логин</label>
-            <input class="form-control" type="text" asp-for="Login" />
-            <span asp-validation-for="Login" class="text-danger"></span>
-        </div>
-        @if (ViewData.ModelState["Wrong Login"] != null)
+        @if (TempData["Wrong Login"] != null)
         {
             <ul>
-                <li class="text-danger">@ViewData.ModelState["Wrong Login"].Errors.FirstOrDefault().ErrorMessage</li>
+                <li class="text-danger">@TempData["Wrong Login"]</li>
             </ul>
         }
         <div class="mb-3">
@@ -27,10 +22,10 @@
             <input class="form-control" type="email" asp-for="Email" />
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
-        @if (ViewData.ModelState["Wrong Email"] != null)
+        @if (TempData["Wrong Email"] != null)
         {
             <ul>
-                <li class="text-danger">@ViewData.ModelState["Wrong Email"].Errors.FirstOrDefault().ErrorMessage</li>
+                <li class="text-danger">@TempData["Wrong Email"]</li>
             </ul>
         }
         <div class="mb-3">
@@ -38,20 +33,29 @@
             <input class="form-control" type="password" asp-for="Password" />
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
-        @if (ViewData.ModelState["Wrong Password"] != null)
+        @if (TempData["Wrong Password"] != null)
         {
             <ul>
-                <li class="text-danger">@ViewData.ModelState["Wrong Password"].Errors.FirstOrDefault().ErrorMessage</li>
+                <li class="text-danger">@TempData["Wrong Password"]</li>
             </ul>
         }
-        @if (ViewData.ModelState["User not found"] != null)
+        @if (TempData["User not found"] != null)
         {
             <ul>
-                <li class="text-danger">@ViewData.ModelState["User not found"].Errors.FirstOrDefault().ErrorMessage</li>
+                <li class="text-danger">@TempData["User not found"]</li>
             </ul>
         }
+        <div class="mb-3">
+            <label asp-for="RememberMe" class="form-label">Запомнить</label>
+            <input type="checkbox" class="form-check" asp-for="RememberMe" />
+        </div>
+
+        <input hidden name="returnUrl" value="@Model.ReturnUrl" />
+
         <div class="row mb-3 justify-content-center">
-            <a class="btn btn-outline-secondary text-decoration-none col-4" asp-action="Register" asp-controller="User">Зарегистрироваться</a>
+            <a class="btn btn-outline-secondary text-decoration-none col-4" asp-action="Register" asp-controller="User" asp-route-returnUrl="@Model.ReturnUrl">
+                Зарегистрироваться
+            </a>
             <div class="col-2"></div>
             <button class="btn btn-outline-primary col-4" type="submit">Войти</button>
         </div>
