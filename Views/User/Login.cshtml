@@ -46,8 +46,8 @@
             </ul>
         }
         <div class="mb-3">
-            <label for="remember" class="form-label">Запомнить</label>
-            <input type="checkbox" class="form-check" name="remember" id="remember" />
+            <label asp-for="RememberMe" class="form-label">Запомнить</label>
+            <input type="checkbox" class="form-check" asp-for="RememberMe" />
         </div>
 
         <input hidden name="returnUrl" value="@Model.ReturnUrl" />
