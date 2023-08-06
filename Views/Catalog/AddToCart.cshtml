@@ -1,0 +1,28 @@
+﻿@model Silerium.ViewModels.ProductViewModel
+
+@{
+    ViewData["Title"] = "Добавление товара в корзину";
+}
+
+@section Scripts
+{
+    <script>
+        $(function() {
+           $("#amount").on("change", function () {
+               var priceNum = Number($("#price").text) * $("#amount").val();
+               $("#price").text = String(priceNum);
+           });
+        });
+    </script>
+}
+
+<div class="container" style="width: 650px;">
+    <h1>@Model.Product.Name</h1>
+    <img alt="картинка товара @Model.Product.Name" src="@Model.Product.Images.FirstOrDefault().Image" />
+    <form asp-action="AddToCart" asp-controller="Catalog">
+        <label for="amount" class="form-label">Количество шт.</label>
+        <input type="number" name="amount" id="amount" class="form-control" />
+        <button type="submit" class="btn">В корзину</button>
+    </form>
+    <h3>Цена итого: <span id="price">@Model.Product.PriceRub</span> &#8381</h3>
+</div>

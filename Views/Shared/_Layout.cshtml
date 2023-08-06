@@ -12,19 +12,27 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow align-content-end">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index" style="font-size: 28px;">Silerium</a>
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index" style="font-size: 28px;">Silerium</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            
-                        </li>
-                    </ul>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-end">
+                    <div class="navbar-nav">
+                        @if (this.User.Identity.IsAuthenticated || this.Context.Request.Cookies["UserAuthCookie"] != null)
+                        {
+                            <a class="nav-item nav-link text-black text-decoration-none" asp-controller="User" asp-action="ShopCart">
+                                Корзина
+                                <i class="bi bi-cart"></i>
+                            </a>
+                        }
+                        <a class="nav-item nav-link text-black text-decoration-none" asp-controller="User" asp-action="Profile">
+                            Личный кабинет
+                            <i class="bi bi-box-arrow-in-right"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </nav>

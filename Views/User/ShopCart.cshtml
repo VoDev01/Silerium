@@ -1,0 +1,37 @@
+﻿@model Silerium.ViewModels.UserViewModel
+@{
+    ViewData["Title"] = "Корзина";
+}
+<div class="container" style="width: 650px;">
+    @if (Model.User.Orders.Count() != 0)
+    {
+        @foreach (var order in Model.User.Orders)
+        {
+            <h2>@order.Product.Name</h2>
+            <h3 class="text-secondary">Номер товара - @order.ProductId</h3>
+            <img alt="картинка товара @order.Product.Name" width="150" height="150" src="@order.Product.Images.FirstOrDefault().Image">
+            <p>@order.Product.PriceRub &#8381;</p>
+            <p>@order.OrderAmount шт.</p>
+            <div class="row">
+                <div class="col-2">
+                    <a class="btn btn-outline-secondary" asp-action="EditOrder" asp-controller="User">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </a>
+                </div>
+                <div class="col-2"></div>
+                <div class="col-2">
+                    <a class="btn btn-outline-danger" asp-action="DeleteOrder" asp-controller="User">
+                            <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </div>
+            <hr />
+        }
+        <a class="btn btn-outline-success" asp-action="CheckoutOrder" asp-controller="User">Оформить заказ</a>
+    }
+    else
+    {
+        <p>На данный момент у вас заказов не имеется.</p>
+        <a class="btn btn-outline-primary" asp-action="Index" asp-controller="Categories">К категориям товаров</a>
+    }
+</div>
