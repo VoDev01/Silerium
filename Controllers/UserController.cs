@@ -222,6 +222,11 @@ namespace Silerium.Controllers
             }
             else
             {
+                var errors = ModelState.Where(x => x.Value.Errors.Any()).Select(x => new { x.Key, x.Value.Errors });
+                foreach (var error in errors)
+                {
+                    logger.LogError(error.Errors.FirstOrDefault().ErrorMessage);
+                }
                 ModelState.AddModelError("ModelState Invalid", "Заполненные данные не верны");
                 return RedirectToAction("Login", "User");
             }
@@ -328,7 +333,7 @@ namespace Silerium.Controllers
                 return View(userVM);
             }
         }
-        public IActionResult CheckoutOrder()
+        public IActionResult CheckoutOrders()
         {
             return View();
         }

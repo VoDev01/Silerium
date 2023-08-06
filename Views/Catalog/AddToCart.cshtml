@@ -6,12 +6,13 @@
 
 @section Scripts
 {
-    <script>
-        $(function() {
-           $("#amount").on("change", function () {
-               var priceNum = Number($("#price").text) * $("#amount").val();
-               $("#price").text = String(priceNum);
-           });
+    <script type="text/javascript">
+        var amount = 0;
+        var price = 0;
+        $("#amount").on("change", function () {
+            amount = $(this).val();
+            price = parseInt($("#price").text());
+            $("#price").text() = String(price * amount);
         });
     </script>
 }
@@ -20,9 +21,15 @@
     <h1>@Model.Product.Name</h1>
     <img alt="картинка товара @Model.Product.Name" src="@Model.Product.Images.FirstOrDefault().Image" />
     <form asp-action="AddToCart" asp-controller="Catalog">
-        <label for="amount" class="form-label">Количество шт.</label>
-        <input type="number" name="amount" id="amount" class="form-control" />
-        <button type="submit" class="btn">В корзину</button>
+        <div class="row">
+            <div class="col-6">
+                <label for="amount" class="form-label">Количество шт.</label>
+            </div>
+            <div class="col-6">
+                <input type="number" name="amount" id="amount" class="form-control" value="1" />
+            </div>
+        </div>
+        <h3>Цена итого: <span id="price">@Model.Product.PriceRub</span> &#8381</h3>
+        <button type="submit" class="btn btn-success">В корзину</button>
     </form>
-    <h3>Цена итого: <span id="price">@Model.Product.PriceRub</span> &#8381</h3>
 </div>
