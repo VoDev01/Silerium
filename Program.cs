@@ -32,7 +32,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true
         };
     })
-    .AddCookie(options => { options.LoginPath = "/User/Login"; });
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/User/Login";
+        options.Cookie = new CookieBuilder
+        {
+            Name = "UserAuthCookie"
+        };
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+    });
 
 builder.Services.AddLogging(logger => logger.AddConsole());
 builder.Services.AddSingleton<Logger<AdminController>>();

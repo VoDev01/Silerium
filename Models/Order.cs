@@ -8,6 +8,7 @@ namespace Silerium.Models
         public Product? Product { get; set; }
         public int UserId { get; set; }
         public User? User { get; set; }
+        public int TotalPrice { get; set; }
         public int OrderAmount { get; set; }
         public DateOnly OrderDate { get; set; }
         [MaxLength(200)]

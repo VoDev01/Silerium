@@ -70,6 +70,9 @@ namespace Silerium.Migrations
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("date");
 
+                    b.Property<int>("TotalPrice")
+                        .HasColumnType("int");
+
                     b.HasKey("UserId", "ProductId");
 
                     b.HasIndex("ProductId");

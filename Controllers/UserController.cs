@@ -13,9 +13,6 @@ using Silerium.ViewModels.AuthModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Http.Extensions;
-using System.Net;
-using Microsoft.AspNetCore.Http;
 
 namespace Silerium.Controllers
 {
@@ -32,7 +29,7 @@ namespace Silerium.Controllers
                 .Build();
             connectionString = configuration.GetConnectionString("Default");
         }
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult EditProfile()
         {
             using (var db = new ApplicationDbContext(connectionString))
@@ -78,30 +75,37 @@ namespace Silerium.Controllers
         [Route("User/Profile")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         //Get the profile page of the specified user
-        public IActionResult Profile()
-        {   
+        public IActionResult Profile(string? returnUrl)
+        {
             using (var db = new ApplicationDbContext(connectionString))
             {
-                try
+                if (returnUrl == null)
                 {
-                    IUsers users = new UsersRepository(db);
-                    UserViewModel userVM = new UserViewModel();
-                    User? user = null;
-                    string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
-                    user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
-                    if (user != null)
-                        userVM.User = user;
-                    else
+                    try
                     {
-                        logger.LogError($"User with access token {HttpContext.Session.GetString("access_token")} was not authorized");
-                        return Unauthorized();
+                        IUsers users = new UsersRepository(db);
+                        UserViewModel userVM = new UserViewModel();
+                        User? user = null;
+                        string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
+                        user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                        if (user != null)
+                            userVM.User = user;
+                        else
+                        {
+                            logger.LogError($"User with access token {HttpContext.Session.GetString("access_token")} was not authorized");
+                            return Unauthorized();
+                        }
+                        return View(userVM);
                     }
-                    return View(userVM);
+                    catch (Exception e)
+                    {
+                        logger.LogError(e.Message);
+                        return RedirectToAction("Error", "Home");
+                    }
                 }
-                catch (Exception e)
+                else
                 {
-                    logger.LogError(e.Message);
-                    return RedirectToAction("Error", "Home");
+                    return LocalRedirect(returnUrl);
                 }
             }
         }
@@ -137,14 +141,14 @@ namespace Silerium.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("User/Login")]
-        public async Task<IActionResult> Login(UserLoginViewModel userLoginVM, string? returnUrl, bool remember)
+        public async Task<IActionResult> Login(UserLoginViewModel userLoginVM, string? returnUrl)
         {
             if (ModelState.IsValid)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     IUsers users = new UsersRepository(db);
-                    User? user = users.GetAllWithInclude(u => u.Orders).Where(u => 
+                    User? user = users.GetAllWithInclude(u => u.Orders).Where(u =>
                         u.Email == userLoginVM.Email &&
                         u.Password == userLoginVM.Password).FirstOrDefault();
                     if (user != null)
@@ -158,7 +162,7 @@ namespace Silerium.Controllers
                         ClaimsIdentity claimsIdentity;
                         ClaimsPrincipal claimsPrincipal;
 
-                        if (remember) //Use cookies authentication
+                        if (userLoginVM.RememberMe) //Use cookies authentication
                         {
                             claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                             claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
@@ -222,11 +226,6 @@ namespace Silerium.Controllers
             }
             else
             {
-                var errors = ModelState.Where(x => x.Value.Errors.Any()).Select(x => new { x.Key, x.Value.Errors });
-                foreach (var error in errors)
-                {
-                    logger.LogError(error.Errors.FirstOrDefault().ErrorMessage);
-                }
                 ModelState.AddModelError("ModelState Invalid", "Заполненные данные не верны");
                 return RedirectToAction("Login", "User");
             }
@@ -303,37 +302,25 @@ namespace Silerium.Controllers
                 return RedirectToAction("Register", "User", new { error = "Заполненные данные не верны" });
             }
         }
-        public async Task<IActionResult> Logout()
-        {
-            using (var db = new ApplicationDbContext(connectionString))
-            {
-                IUsers users = new UsersRepository(db);
-                string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
-                User user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
-                UserViewModel userVM = new UserViewModel { User = user };
-                return View(userVM);
-            }
-        }
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize]
-        public async Task<IActionResult> LogoutPost()
+        public async Task<IActionResult> Logout()
         {
             HttpContext.Session.Remove("access_token");
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult ShopCart()
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IUsers users = new UsersRepository(db);
-                string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
+                string userEmail = HttpContext.User.Identity.Name;
                 UserViewModel userVM = new UserViewModel { User = users.GetAllWithInclude(u => u.Orders).Where(u => u.Email == userEmail).FirstOrDefault() };
                 return View(userVM);
             }
         }
-        public IActionResult CheckoutOrders()
+        public IActionResult CheckoutOrder()
         {
             return View();
         }

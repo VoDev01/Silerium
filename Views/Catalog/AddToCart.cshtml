@@ -7,19 +7,22 @@
 @section Scripts
 {
     <script type="text/javascript">
-        var amount = 0;
-        var price = 0;
-        $("#amount").on("change", function () {
-            amount = $(this).val();
-            price = parseInt($("#price").text());
-            $("#price").text() = String(price * amount);
+        var basePrice = 
+        $("#amount").change(function () {
+            var amount = $(this).val();
+            console.log($("#price").text().replace(/,/g, ""));
+            var basePrice = $("#base_price").val();
+            var totalPrice = basePrice * amount;
+            var strPrice = new Intl.NumberFormat("en-US").format(totalPrice);
+            console.log(strPrice)
+            $("#price").text(strPrice);
         });
     </script>
 }
 
 <div class="container" style="width: 650px;">
     <h1>@Model.Product.Name</h1>
-    <img alt="картинка товара @Model.Product.Name" src="@Model.Product.Images.FirstOrDefault().Image" />
+    <img alt="картинка товара" src="@Model.Product.Images.FirstOrDefault().Image" />
     <form asp-action="AddToCart" asp-controller="Catalog">
         <div class="row">
             <div class="col-6">
@@ -29,6 +32,8 @@
                 <input type="number" name="amount" id="amount" class="form-control" value="1" />
             </div>
         </div>
+        <input hidden id="base_price" value="@Model.Product.PriceRub" />
+        <input hidden name="@Model.Product.Id" />
         <h3>Цена итого: <span id="price">@Model.Product.PriceRub</span> &#8381</h3>
         <button type="submit" class="btn btn-success text-white">В корзину</button>
     </form>
