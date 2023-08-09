@@ -70,6 +70,10 @@ namespace Silerium.Migrations
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("OrderStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<int>("TotalPrice")
                         .HasColumnType("int");
 

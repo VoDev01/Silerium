@@ -2,6 +2,7 @@
 
 namespace Silerium.Models
 {
+    public enum OrderStatus { ISSUING, OPENED, PENDING, CLOSED, DELIVERY }
     public class Order
     {
         public int ProductId { get; set; }
@@ -14,5 +15,6 @@ namespace Silerium.Models
         [MaxLength(200)]
         [Required]
         public string OrderAddress { get; set; }
+        public OrderStatus OrderStatus { get; set; } = OrderStatus.ISSUING;
     }
 }

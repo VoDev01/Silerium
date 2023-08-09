@@ -32,6 +32,9 @@ namespace Silerium.Data
             configurationBuilder.Properties<DateOnly>()
                 .HaveConversion<DateOnlyConverter>()
                 .HaveColumnType("date");
+            configurationBuilder.Properties<OrderStatus>()
+                .HaveConversion<OrderStatusConverter>()
+                .HaveColumnType("nvarchar(10)");
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

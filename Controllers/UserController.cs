@@ -316,7 +316,11 @@ namespace Silerium.Controllers
             {
                 IUsers users = new UsersRepository(db);
                 string userEmail = HttpContext.User.Identity.Name;
-                UserViewModel userVM = new UserViewModel { User = users.GetAllWithInclude(u => u.Orders).Where(u => u.Email == userEmail).FirstOrDefault() };
+                UserViewModel userVM = new UserViewModel { User = users
+                    .GetAllWithInclude(u => u.Orders)
+                    .ThenInclude(o => ((Order)o).Product)
+                    .ThenInclude(p => p.Images)
+                    .Where(u => u.Email == userEmail).FirstOrDefault() };
                 return View(userVM);
             }
         }
