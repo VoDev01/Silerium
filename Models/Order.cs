@@ -11,7 +11,7 @@ namespace Silerium.Models
         public User? User { get; set; }
         public int TotalPrice { get; set; }
         public int OrderAmount { get; set; }
-        public DateOnly OrderDat { get; set; }
+        public DateOnly OrderDate { get; set; }
         [MaxLength(200)]
         [Required]
         public string OrderAddress { get; set; }
