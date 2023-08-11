@@ -13,9 +13,6 @@ using Silerium.ViewModels.AuthModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Http.Extensions;
-using System.Net;
-using Microsoft.AspNetCore.Http;
 
 namespace Silerium.Controllers
 {
@@ -79,7 +76,7 @@ namespace Silerium.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         //Get the profile page of the specified user
         public IActionResult Profile(string? returnUrl)
-        {   
+        {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 if (returnUrl == null)
@@ -151,7 +148,7 @@ namespace Silerium.Controllers
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     IUsers users = new UsersRepository(db);
-                    User? user = users.GetAllWithInclude(u => u.Orders).Where(u => 
+                    User? user = users.GetAllWithInclude(u => u.Orders).Where(u =>
                         u.Email == userLoginVM.Email &&
                         u.Password == userLoginVM.Password).FirstOrDefault();
                     if (user != null)
@@ -313,15 +310,36 @@ namespace Silerium.Controllers
             return RedirectToAction("Index", "Home");
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
-        public IActionResult ShopCart()
+        public IActionResult ShopCart(string order_status = "ISSUING")
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IUsers users = new UsersRepository(db);
-                string userEmail = HttpContext.User.Identity.Name;
-                UserViewModel userVM = new UserViewModel { User = users.GetAllWithInclude(u => u.Orders).Where(u => u.Email == userEmail).FirstOrDefault() };
-                return View(userVM);
+                IOrders orders = new OrdersRepository(db);
+                string? userEmail = HttpContext.User.Identity.Name;
+                if (userEmail != null)
+                {
+                    User user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                    var orderStatusVal = Enum.Parse(typeof(OrderStatus), order_status);
+                    UserViewModel userVM = new UserViewModel
+                    {
+                        User = user,
+                        UserOrders = orders
+                        .GetAllWithInclude(o => o.Product)
+                        .ThenInclude(p => ((Product)p).Images)
+                        .Where(o => o.UserId == user.Id && o.OrderStatus.Equals(orderStatusVal)).ToList()
+                    };
+                    return View(userVM);
+                }
+                else
+                {
+                    return Unauthorized();
+                }
             }
+        }
+        public IActionResult ShopCartFilter(string order_status)
+        {
+            return RedirectToAction("ShopCart", "User", new { order_status });
         }
         public IActionResult CheckoutOrder()
         {
