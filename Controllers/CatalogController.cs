@@ -129,7 +129,6 @@ namespace Silerium.Controllers
                     Products = _products,
                     Subcategories = subcategories.GetAll().ToList(),
                     Categories = categories.GetAll().ToList(),
-                    //ProductsQuery = new ProductsQuery { Page = page, SortOrder = Enum.Parse<Models.Query.SortOrder>(sort_order) },
                     SortOrder = Enum.Parse<SortOrder>(sort_order),
                     FirstPaginationIndex = firstPageIndex,
                     LastPaginationIndex = lastPageIndex,
