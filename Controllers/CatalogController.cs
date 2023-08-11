@@ -183,6 +183,7 @@ namespace Silerium.Controllers
                         OrderAmount = amount,
                         OrderDate = DateOnly.FromDateTime(DateTime.UtcNow),
                         TotalPrice = amount * product.PriceRub,
+                        OrderStatus = OrderStatus.ISSUING,
                         User = user
                     });
                     orders.Save();

@@ -39,7 +39,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             Name = "UserAuthCookie"
         };
-        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.ExpireTimeSpan = TimeSpan.FromHours(6);
     });
 
 builder.Services.AddLogging(logger => logger.AddConsole());

@@ -1,68 +1,140 @@
-﻿@model Silerium.ViewModels.UserViewModel
+﻿@using Silerium.Models;
+@model Silerium.ViewModels.UserViewModel
 @{
     ViewData["Title"] = "Корзина";
 }
-<div class="container" style="width: 650px;">
-    @if (Model.User.Orders.Count() != 0)
+<div class="container-fluid mx-5">
+    @if (Model.UserOrders.Count() != 0)
     {
-        @foreach (var order in Model.User.Orders.Where(o => 
-        o.OrderStatus == Silerium.Models.OrderStatus.OPENED || 
-        o.OrderStatus == Silerium.Models.OrderStatus.PENDING ||
-        o.OrderStatus == Silerium.Models.OrderStatus.DELIVERY))
-        {
-            var productID = order.ProductId;
-            string productIDTemp = productID.ToString();
-            string productIDStr = "00000000";
-            productIDStr = productIDStr.Remove(productIDStr.Length - productIDTemp.Length).Insert(productIDStr.Length - productIDTemp.Length, productIDTemp);
-            <h2>@order.Product.Name</h2>
-            <h4 class="text-secondary">Номер товара - @productIDStr</h4>
-            <img alt="картинка товара" width="150" height="150" src="@order.Product.Images.FirstOrDefault().Image">
-            <p>Цена: @order.Product.PriceRub &#8381;</p>
-            <p>Количество: @order.OrderAmount шт.</p>
-            var totalPrice = order.Product.PriceRub * order.OrderAmount;
-            <p>Цена итого: @totalPrice &#8381;</p>
-            string orderStatus = "";
-            string orderColor = "";
-            switch(order.OrderStatus)
-            {
-                case Silerium.Models.OrderStatus.ISSUING:
-                    orderStatus = "Ожидает оформления";
-                    orderColor = "#7a7a7a";
-                    break;
-                case Silerium.Models.OrderStatus.OPENED:
-                    orderStatus = "Открыт";
-                    orderColor = "#1aa922";
-                    break;
-                case Silerium.Models.OrderStatus.PENDING:
-                    orderStatus = "Ожидается";
-                    orderColor = "#a0a147";
-                    break;
-                case Silerium.Models.OrderStatus.DELIVERY:
-                    orderStatus = "Отправлен";
-                    orderColor = "#0b78a1";
-                    break;
-            }
-            <p style="color: @orderColor;">Статус заказа: @orderStatus</p>
-            <div class="row">
-                <div class="col-2">
-                    <a class="btn btn-outline-secondary" asp-action="EditOrder" asp-controller="User">
-                        <i class="bi bi-arrow-repeat"></i>
-                    </a>
-                </div>
-                <div class="col-2"></div>
-                <div class="col-2">
-                    <a class="btn btn-outline-danger" asp-action="DeleteOrder" asp-controller="User">
-                            <i class="bi bi-trash"></i>
-                    </a>
-                </div>
+        <div class="row">
+            <div class="col-9">
+                @foreach (var order in Model.UserOrders)
+                {
+                    var productID = order.ProductId;
+                    string productIDTemp = productID.ToString();
+                    string productIDStr = "00000000";
+                    productIDStr = productIDStr.Remove(productIDStr.Length - productIDTemp.Length).Insert(productIDStr.Length - productIDTemp.Length, productIDTemp);
+                    <h2>@order.Product.Name</h2>
+                    <h4 class="text-secondary">Номер товара - @productIDStr</h4>
+                    <img alt="картинка товара" width="250" height="250" src="@order.Product.Images.FirstOrDefault().Image">
+                    <p>Цена: @order.Product.PriceRub &#8381;</p>
+                    <p>Количество: @order.OrderAmount шт.</p>
+                    var totalPrice = order.Product.PriceRub * order.OrderAmount;
+                    <p>Цена итого: @totalPrice &#8381;</p>
+                    string orderStatus = "";
+                    string orderColor = "";
+                    switch(order.OrderStatus)
+                    {
+                        case Silerium.Models.OrderStatus.ISSUING:
+                            orderStatus = "Ожидает оформления";
+                            orderColor = "#7a7a7a";
+                            break;
+                        case Silerium.Models.OrderStatus.OPENED:
+                            orderStatus = "Открыт";
+                            orderColor = "#1aa922";
+                            break;
+                        case Silerium.Models.OrderStatus.PENDING:
+                            orderStatus = "Ожидается";
+                            orderColor = "#a0a147";
+                            break;
+                        case Silerium.Models.OrderStatus.DELIVERY:
+                            orderStatus = "Отправлен";
+                            orderColor = "#0b78a1";
+                            break;
+                    }
+                    <p style="color: @orderColor;">Статус заказа: @orderStatus</p>
+                    <div class="row">
+                        <div class="col-2">
+                            <a class="btn btn-outline-secondary" asp-action="EditOrder" asp-controller="User">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </a>
+                        </div>
+                        <div class="col-2"></div>
+                        <div class="col-2">
+                            <a class="btn btn-outline-danger" asp-action="DeleteOrder" asp-controller="User">
+                                    <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <hr />
+                }
+                <a class="btn btn-outline-success" asp-action="CheckoutOrder" asp-controller="User">Оформить заказы</a>
             </div>
-            <hr />
-        }
-        <a class="btn btn-outline-success" asp-action="CheckoutOrder" asp-controller="User">Оформить заказ</a>
+            <div class="col-3 mt-1">
+                <h3>Фильтровать по статусу</h3>
+                <form asp-action="ShopCartFilter" asp-controller="User">
+                    <select class="form-select mb-3" name="order_status"  style="width: 250px;">
+                        @foreach(var orderStatus in Enum.GetValues(typeof(OrderStatus)))
+                        {
+                            string orderStatusStr = orderStatus.ToString();
+                            orderStatusStr.ToUpper();
+                            string orderStatusOptStr = string.Empty;
+                            switch (orderStatusStr)
+                            {
+                                case "ISSUING":
+                                    orderStatusOptStr = "Ожидает оформления";
+                                    break;
+                                case "OPENED":
+                                    orderStatusOptStr = "Открыт";
+                                    break;
+                                case "PENDING":
+                                    orderStatusOptStr = "Ожидается";
+                                    break;
+                                case "DELIVERY":
+                                    orderStatusOptStr = "Отправлен";
+                                    break;
+                            }
+                            if (orderStatusOptStr != string.Empty)
+                            {
+                                <option value="@orderStatusStr">@orderStatusOptStr</option>
+                            }
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-outline-success">Фильтровать</button>
+                </form>
+            </div>
+        </div>
     }
     else
     {
-        <p>На данный момент у вас заказов не имеется.</p>
-        <a class="btn btn-outline-primary" asp-action="Index" asp-controller="Categories">К категориям товаров</a>
+        <div class="row">
+            <div class="col-9">
+                <p>На данный момент у вас заказов не имеется.</p>
+                <a class="btn btn-outline-primary" asp-action="Index" asp-controller="Categories">К категориям товаров</a>
+            </div>
+            <div class="col-3 mt-1">
+                <h3>Фильтровать по статусу</h3>
+                <form asp-action="ShopCartFilter" asp-controller="User">
+                    <select class="form-select mb-3" name="order_status" style="width: 250px;">
+                        @foreach (var orderStatus in Enum.GetValues(typeof(OrderStatus)))
+                        {
+                            string orderStatusStr = orderStatus.ToString();
+                            orderStatusStr.ToUpper();
+                            string orderStatusOptStr = string.Empty;
+                            switch (orderStatusStr)
+                            {
+                                case "ISSUING":
+                                    orderStatusOptStr = "Ожидает оформления";
+                                    break;
+                                case "OPENED":
+                                    orderStatusOptStr = "Открыт";
+                                    break;
+                                case "PENDING":
+                                    orderStatusOptStr = "Ожидается";
+                                    break;
+                                case "DELIVERY":
+                                    orderStatusOptStr = "Отправлен";
+                                    break;
+                            }
+                            if (orderStatusOptStr != string.Empty)
+                            {
+                                <option value="@orderStatusStr">@orderStatusOptStr</option>
+                            }
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-outline-success">Фильтровать</button>
+                </form>
+            </div>
+        </div>
     }
 </div>
