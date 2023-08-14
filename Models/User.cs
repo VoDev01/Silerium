@@ -20,6 +20,8 @@ namespace Silerium.Models
         public DateTime? BirthDate { get; set; }
         [MaxLength(50)]
         public string Country { get; set; }
+        [MaxLength(75)]
+        public string? City { get; set; }
         [MaxLength(200)]
         public string? HomeAdress { get; set; }
         [MaxLength(20)]

@@ -111,13 +111,13 @@ namespace Silerium.Controllers
                 }
             }
         }
-        [AcceptVerbs("GET", "POST")]
-        public async Task<JsonResult> CheckEmail(string email)
+        [AcceptVerbs("Get", "Post")]
+        public async Task<JsonResult> CheckEmail(string Email)
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IUsers users = new UsersRepository(db);
-                if (await users.IfAnyAsync(u => u.Email == email))
+                if (await users.IfAnyAsync(u => u.Email == Email))
                 {
                     return Json(false);
                 }
@@ -125,43 +125,44 @@ namespace Silerium.Controllers
                     return Json(true);
             }
         }
-        [AcceptVerbs("GET", "POST")]
-        public async Task<JsonResult> CheckPhone(string phone)
+        [AcceptVerbs("Get", "Post")]
+        public async Task<JsonResult> CheckPhone(string Phone)
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IUsers users = new UsersRepository(db);
-                var phoneApi = new CleanClientAsync(Environment.GetEnvironmentVariable("DADATA_API_TOKEN"), Environment.GetEnvironmentVariable("DADATA_SECRET"));
-                var result = await phoneApi.Clean<Phone>(phone);
-                if(result.qc_conflict == "2" || result.qc_conflict == "3")
+                var api = new CleanClientAsync(Environment.GetEnvironmentVariable("DADATA_API_TOKEN"), Environment.GetEnvironmentVariable("DADATA_SECRET"));
+                var phoneResult = await api.Clean<Phone>(Phone);
+                if(phoneResult.qc_conflict == "2" || phoneResult.qc_conflict == "3")
                 {
-                    logger.LogWarning($"Город или регион адреса телефона {result.source} отличаются. Город: {result.city}, регион: {result.region}.");
+                    logger.LogWarning($"Город или регион адреса телефона {phoneResult.source} отличаются от указанных. " +
+                        $"Город: {phoneResult.city}, регион: {phoneResult.region}.");
                 }
-                if(result.qc == "0" || result.qc == "7")
+                if(phoneResult.qc == "0" || phoneResult.qc == "7")
                 {
                     return Json(true);
                 }
-                else if (result.qc == "2")
+                else if (phoneResult.qc == "2")
+                {
+                    logger.LogWarning($"Телефон {phoneResult.source} пустой или заведомо мусорный.");
+                    return Json($"Введите действующий номер телефона.");
+                }
+                else if (phoneResult.qc == "1")
                 {
                     return Json(false);
                 }
-                else if (result.qc == "1")
+                else if (phoneResult.qc == "3")
                 {
-                    logger.LogWarning($"Телефон распознан с допущениями или не распознан. Просьба проверить телефон {result.source} в ручную.");
-                    return Json($"Телефон распознан с допущениями или не распознан.");
-                }
-                else if (result.qc == "3")
-                {
-                    logger.LogWarning($"Обнаружено несколько телефонов, распознан первый. Просьба проверить телефон {result.source} в ручную.");
-                    return Json($"Обнаружено несколько телефонов, распознан первый. Просьба проверить телефон {result.source} в ручную.");
+                    logger.LogWarning($"Обнаружено несколько телефонов, распознан первый. Просьба проверить телефон {phoneResult.source} в ручную в случае несовпадений.");
+                    return Json(true);
                 }
                 return Json(false);
             }
         }
-        [AcceptVerbs("GET", "POST")]
-        public async Task<JsonResult> CheckPasswords(string password, string confirm_password)
+        [AcceptVerbs("Get", "Post")]
+        public async Task<JsonResult> CheckPasswords(string Password, string ConfirmPassword)
         {
-            if(password == confirm_password) 
+            if(Password == ConfirmPassword) 
             { 
                 return Json(true); 
             }
@@ -310,6 +311,13 @@ namespace Silerium.Controllers
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     IUsers users = new UsersRepository(db);
+                    var api = new SuggestClientAsync(Environment.GetEnvironmentVariable("DADATA_API_TOKEN"));
+                    var apiResult = await api.Iplocate(Request.HttpContext.Connection.RemoteIpAddress.ToString());
+                    if (!Request.Cookies.Any(c => c.Key == "UserCity"))
+                    {
+                        if(apiResult.location != null)
+                            Response.Cookies.Append("UserCity", apiResult.location.value, new CookieOptions { Expires = DateTime.Now.AddHours(24) });
+                    }
                     User user = new User
                     {
                         Name = userRegisterVM.Name,
@@ -320,6 +328,7 @@ namespace Silerium.Controllers
                         Country = userRegisterVM.Country,
                         Phone = userRegisterVM.Phone,
                         HomeAdress = userRegisterVM.HomeAdress,
+                        City = apiResult.location?.value,
                         Role = "Client"
                     };
 

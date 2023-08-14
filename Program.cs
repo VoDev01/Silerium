@@ -6,6 +6,7 @@ using Silerium.Controllers;
 using Silerium.Data;
 using Silerium;
 using Silerium.Middlewares;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +51,10 @@ builder.Services.AddSingleton<Logger<CatalogController>>();
 var app = builder.Build();
 
 app.UseSession();
+app.UseForwardedHeaders(options: new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 app.UseJWTAuthorizationMiddleware();
 
 // Configure the HTTP request pipeline.
