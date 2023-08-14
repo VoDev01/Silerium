@@ -17,6 +17,10 @@
             }
             <p>Номер телефона: @Model.User.Phone</p>
             <p>Страна проживания: @Model.User.Country</p>
+            @{
+                var city = Model.User.City ?? "Не указан";
+            }
+            <p>Город: @city</p>
             @if (Model.User.HomeAdress == null)
             {
                 <p>Адрес доставки: Не указан</p>

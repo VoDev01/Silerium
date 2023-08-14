@@ -20,11 +20,15 @@ namespace Silerium.Models
         public DateTime? BirthDate { get; set; }
         [MaxLength(50)]
         public string Country { get; set; }
+        [MaxLength(75)]
+        public string? City { get; set; }
         [MaxLength(200)]
         public string? HomeAdress { get; set; }
         [MaxLength(20)]
         public string? Phone { get; set; }
         public byte[] ProfilePicture { get; set; }
+        [MaxLength(40)]
+        public string Role { get; set; }
         public IEnumerable<Order> Orders { get; set; }
         public IEnumerable<Product> Products { get; set; }
     }

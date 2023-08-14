@@ -8,7 +8,7 @@ namespace Silerium.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) {  }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
         public ApplicationDbContext(string connectionString) : base(GetOptions(connectionString))
         { }
         public DbSet<Category> Categories { get; set; }
