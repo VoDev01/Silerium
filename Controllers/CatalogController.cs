@@ -178,9 +178,10 @@ namespace Silerium.Controllers
                     Product product = products.GetByID(id - 1);
                     orders.Create(new Order
                     {
+                        OrderId = Guid.NewGuid(),
                         Product = product,
                         OrderAmount = amount,
-                        OrderDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                        OrderDate = DateTime.UtcNow,
                         TotalPrice = amount * product.PriceRub,
                         OrderStatus = OrderStatus.ISSUING,
                         User = user

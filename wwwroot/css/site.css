@@ -14,6 +14,10 @@ html {
     .ad-text {
         text-align: center;
     }
+    .mobile-margin
+    {
+        margin: 0 20px 0 20px;
+    }
 }
 @media (max-width: 850px) {
     .category-btn {

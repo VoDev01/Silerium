@@ -1,4 +1,5 @@
-﻿@using Silerium.Models;
+﻿@using System.Globalization
+@using Silerium.Models;
 @model Silerium.ViewModels.UserViewModel
 @{
     ViewData["Title"] = "Корзина";
@@ -16,11 +17,12 @@
                     productIDStr = productIDStr.Remove(productIDStr.Length - productIDTemp.Length).Insert(productIDStr.Length - productIDTemp.Length, productIDTemp);
                     <h2>@order.Product.Name</h2>
                     <h4 class="text-secondary">Номер товара - @productIDStr</h4>
+                    <p>Номер заказа - @order.OrderId</p>
                     <img alt="картинка товара" width="250" height="250" src="@order.Product.Images.FirstOrDefault().Image">
-                    <p>Цена: @order.Product.PriceRub &#8381;</p>
+                    <p>Цена: @order.Product.PriceRub.ToString("N1", CultureInfo.CreateSpecificCulture("ru-RU")) &#8381;</p>
                     <p>Количество: @order.OrderAmount шт.</p>
                     var totalPrice = order.Product.PriceRub * order.OrderAmount;
-                    <p>Цена итого: @totalPrice &#8381;</p>
+                    <p>Цена итого: @totalPrice.ToString("N1", CultureInfo.CreateSpecificCulture("ru-RU")) &#8381;</p>
                     string orderStatus = "";
                     string orderColor = "";
                     switch(order.OrderStatus)
@@ -45,15 +47,18 @@
                     <p style="color: @orderColor;">Статус заказа: @orderStatus</p>
                     <div class="row">
                         <div class="col-2">
-                            <a class="btn btn-outline-secondary" asp-action="EditOrder" asp-controller="User">
+                            <a class="btn btn-outline-secondary" asp-action="EditOrder" asp-controller="User" asp-route-orderid="@order.OrderId">
                                 <i class="bi bi-arrow-repeat"></i>
                             </a>
                         </div>
                         <div class="col-2"></div>
                         <div class="col-2">
-                            <a class="btn btn-outline-danger" asp-action="DeleteOrder" asp-controller="User">
+                            <form asp-action="DeleteOrder" asp-controller="User">
+                                <input hidden name="id" value="@order.OrderId.ToString()">
+                                <button type="submit" class="btn btn-outline-danger">
                                     <i class="bi bi-trash"></i>
-                            </a>
+                                </button>
+                            </form>
                         </div>
                     </div>
                     <hr />

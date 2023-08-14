@@ -1,5 +1,43 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@using System.Globalization
+@model Silerium.Models.Order
+
 @{
+    ViewData["Title"] = "Редактирование заказа";
 }
+
+@section Scripts
+{
+    <script type="text/javascript">
+        var basePrice = 
+        $("#amount").change(function () {
+            var amount = $(this).val();
+            var basePrice = $("#base_price").val();
+            var totalPrice = (basePrice * amount).toFixed(2);
+            console.log(totalPrice);
+            var strPrice = new Intl.NumberFormat("ru").format(totalPrice);
+            console.log(strPrice)
+            $("#price").text(strPrice);
+        });
+    </script>
+}
+
+<div class="container mobile-margin" style="width: 500px;">
+    <h1>@Model.Product.Name</h1>
+    <p>Номер заказа - @Model.OrderId.ToString()</p>
+    <img alt="картинка товара" src="@Model.Product.Images.FirstOrDefault().Image" />
+    <form asp-action="EditOrder" asp-controller="User">
+        <div class="row">
+            <div class="col-2">
+                <label for="amount" class="form-label">Количество шт.</label>
+            </div>
+            <div class="col-2">
+                <input type="number" name="amount" id="amount" class="form-control" value="1" style="width: 100px;" />
+            </div>
+            <div class="col-8"></div>
+        </div>
+        <input hidden id="base_price" value="@Model.Product.PriceRub" />
+        <input hidden name="id" value="@Model.OrderId.ToString()" />
+        <h3>Цена итого: <span id="price">@Model.Product.PriceRub.ToString("N1", CultureInfo.CreateSpecificCulture("ru-RU"))</span> &#8381</h3>
+        <button type="submit" class="btn btn-success text-white">Изменить</button>
+    </form>
+</div>

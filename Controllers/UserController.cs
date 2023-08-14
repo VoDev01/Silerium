@@ -402,17 +402,38 @@ namespace Silerium.Controllers
         {
             return RedirectToAction("ShopCart", "User", new { order_status });
         }
-        public IActionResult CheckoutOrder()
+        public IActionResult EditOrder(string orderid)
         {
-            return View();
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IOrders orders = new OrdersRepository(db);
+                Order order = orders.GetAllWithInclude(o => o.Product).ThenInclude(p => ((Product)p).Images).Where(o => o.OrderId.ToString() == orderid).FirstOrDefault();
+                return View(order);
+            }
         }
-        public IActionResult EditOrder()
+        [HttpPost]
+        public IActionResult EditOrder(int amount, string id)
         {
-            return View();
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IOrders orders = new OrdersRepository(db);
+                Order order = orders.FindSetByCondition(o => o.OrderId.ToString() == id).FirstOrDefault();
+                order.TotalPrice *= amount;
+                order.OrderAmount = amount;
+                orders.Save();
+                return RedirectToAction("ShopCart", "User");
+            }
         }
-        public IActionResult DeleteOrder()
+        [HttpPost]
+        public IActionResult DeleteOrder(string id)
         {
-            return View();
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IOrders orders = new OrdersRepository(db);
+                orders.Delete(orders.FindSetByCondition(o => o.OrderId == new Guid(id)).FirstOrDefault());
+                orders.Save();
+                return RedirectToAction("ShopCart", "User");
+            }
         }
     }
 }

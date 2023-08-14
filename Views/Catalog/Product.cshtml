@@ -1,4 +1,5 @@
-﻿@model Silerium.ViewModels.ProductViewModel
+﻿@using System.Globalization
+@model Silerium.ViewModels.ProductViewModel
 
 @{
     ViewData["Title"] = Model.Product.Name;
@@ -38,7 +39,7 @@
             }
         </div>
     </div>
-    <p>Цена в рублях: @Model.Product.PriceRub &#8381;</p>
+    <p>Цена в рублях: @Model.Product.PriceRub.ToString("N1", CultureInfo.CreateSpecificCulture("ru-RU")) &#8381;</p>
     <p>Количество - @Model.Product.StockAmount шт.</p>
     @{
         string available = Model.Product.Available ? "Да" : "Нет";

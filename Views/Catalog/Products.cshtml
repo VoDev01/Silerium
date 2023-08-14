@@ -1,4 +1,5 @@
-﻿@model Silerium.ViewModels.ProductsCatalogViewModel
+﻿@using System.Globalization
+@model Silerium.ViewModels.ProductsCatalogViewModel
 
 @{
     ViewData["Title"] = Model.SubcategoryName;
@@ -162,7 +163,7 @@
                     <div>
                         <h3>@product.Name</h3>
                         <img src="@product.Images.FirstOrDefault().Image" alt="картинка товара">
-                        <p>Цена в рублях: @product.PriceRub &#8381;</p>
+                        <p>Цена в рублях: @product.PriceRub.ToString("N1", CultureInfo.CreateSpecificCulture("ru-RU")) &#8381;</p>
                         <div class="row">
                             <div class="col-4">
                                 <p>Количество - @product.StockAmount шт.</p>

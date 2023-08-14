@@ -1,5 +1,45 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model Silerium.Models.Order
+
 @{
+    ViewData["Title"] = "Отмена заказа";
 }
+
+<div class="container-fluid mx-5">
+    @{
+        var productID = Model.ProductId;
+        string productIDTemp = productID.ToString();
+        string productIDStr = "00000000";
+        productIDStr = productIDStr.Remove(productIDStr.Length - productIDTemp.Length).Insert(productIDStr.Length - productIDTemp.Length, productIDTemp);
+        <h2>@Model.Product.Name</h2>
+        <h4 class="text-secondary">Номер товара - @productIDStr</h4>
+        <p>Номер заказа - @Model.OrderId</p>
+        <img alt="картинка товара" width="250" height="250" src="@Model.Product.Images.FirstOrDefault().Image">
+        <p>Цена: @Model.Product.PriceRub &#8381;</p>
+        <p>Количество: @Model.OrderAmount шт.</p>
+        var totalPrice = Model.Product.PriceRub * Model.OrderAmount;
+        <p>Цена итого: @totalPrice &#8381;</p>
+        string orderStatus = "";
+        string orderColor = "";
+        switch (Model.OrderStatus)
+        {
+            case Silerium.Models.OrderStatus.ISSUING:
+                orderStatus = "Ожидает оформления";
+                orderColor = "#7a7a7a";
+                break;
+            case Silerium.Models.OrderStatus.OPENED:
+                orderStatus = "Открыт";
+                orderColor = "#1aa922";
+                break;
+            case Silerium.Models.OrderStatus.PENDING:
+                orderStatus = "Ожидается";
+                orderColor = "#a0a147";
+                break;
+            case Silerium.Models.OrderStatus.DELIVERY:
+                orderStatus = "Отправлен";
+                orderColor = "#0b78a1";
+                break;
+        }
+        <p style="color: @orderColor;">Статус заказа: @orderStatus</p>
+    }
+    <a class="btn btn-outline-success" asp-action="ShopCart" asp-controller="User">К корзине</a>
+</div>

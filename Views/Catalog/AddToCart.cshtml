@@ -1,4 +1,5 @@
-﻿@model Silerium.ViewModels.ProductViewModel
+﻿@using System.Globalization
+@model Silerium.ViewModels.ProductViewModel
 
 @{
     ViewData["Title"] = "Добавление товара в корзину";
@@ -10,10 +11,10 @@
         var basePrice = 
         $("#amount").change(function () {
             var amount = $(this).val();
-            console.log($("#price").text().replace(/,/g, ""));
             var basePrice = $("#base_price").val();
-            var totalPrice = basePrice * amount;
-            var strPrice = new Intl.NumberFormat("en-US").format(totalPrice);
+            var totalPrice = (basePrice * amount).toFixed(1);
+            console.log(totalPrice);
+            var strPrice = new Intl.NumberFormat("ru", {minimumFractionDigits: 1}).format(totalPrice);
             console.log(strPrice)
             $("#price").text(strPrice);
         });
@@ -29,12 +30,12 @@
                 <label for="amount" class="form-label">Количество шт.</label>
             </div>
             <div class="col-6">
-                <input type="number" name="amount" id="amount" class="form-control" value="1" />
+                <input type="number" name="amount" id="amount" class="form-control" value="1" style="width: 100px;" />
             </div>
         </div>
         <input hidden id="base_price" value="@Model.Product.PriceRub" />
-        <input hidden name="@Model.Product.Id" />
-        <h3>Цена итого: <span id="price">@Model.Product.PriceRub</span> &#8381</h3>
+        <input hidden name="id" value="@Model.Product.Id" />
+        <h3>Цена итого: <span id="price">@Model.Product.PriceRub.ToString("N1", CultureInfo.CreateSpecificCulture("ru-RU"))</span> &#8381</h3>
         <button type="submit" class="btn btn-success text-white">В корзину</button>
     </form>
 </div>
