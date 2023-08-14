@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Silerium.Data;
 
@@ -11,9 +12,11 @@ using Silerium.Data;
 namespace Silerium.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230812201922_UsersRoles")]
+    partial class UsersRoles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,7 +47,7 @@ namespace Silerium.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("Silerium.Models.Order", b =>
@@ -68,14 +71,17 @@ namespace Silerium.Migrations
                         .HasDefaultValue(1);
 
                     b.Property<DateTime>("OrderDate")
-                        .HasColumnType("date");
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("OrderStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<int>("TotalPrice")
-                        .HasColumnType("int");
+                    b.Property<float>("TotalPrice")
+                        .HasColumnType("real");
 
                     b.HasKey("UserId", "ProductId");
 
@@ -94,7 +100,7 @@ namespace Silerium.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Pages", (string)null);
+                    b.ToTable("Pages");
                 });
 
             modelBuilder.Entity("Silerium.Models.Product", b =>
@@ -120,8 +126,8 @@ namespace Silerium.Migrations
                     b.Property<int>("PageId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PriceRub")
-                        .HasColumnType("int");
+                    b.Property<float>("PriceRub")
+                        .HasColumnType("real");
 
                     b.Property<int>("StockAmount")
                         .HasColumnType("int");
@@ -135,7 +141,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("SubcategoryId");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("Silerium.Models.ProductImage", b =>
@@ -157,7 +163,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImages", (string)null);
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("Silerium.Models.ProductSpecification", b =>
@@ -185,7 +191,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductSpecification", (string)null);
+                    b.ToTable("ProductSpecification");
                 });
 
             modelBuilder.Entity("Silerium.Models.Subcategory", b =>
@@ -211,7 +217,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Subcategories", (string)null);
+                    b.ToTable("Subcategories");
                 });
 
             modelBuilder.Entity("Silerium.Models.User", b =>
@@ -268,7 +274,7 @@ namespace Silerium.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Silerium.Models.Order", b =>

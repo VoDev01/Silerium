@@ -13,6 +13,8 @@ using Silerium.ViewModels.AuthModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
+using Dadata;
+using Dadata.Model;
 
 namespace Silerium.Controllers
 {
@@ -109,7 +111,7 @@ namespace Silerium.Controllers
                 }
             }
         }
-        [AcceptVerbs("Get", "Post")]
+        [AcceptVerbs("GET", "POST")]
         public async Task<JsonResult> CheckEmail(string email)
         {
             using (var db = new ApplicationDbContext(connectionString))
@@ -121,6 +123,51 @@ namespace Silerium.Controllers
                 }
                 else
                     return Json(true);
+            }
+        }
+        [AcceptVerbs("GET", "POST")]
+        public async Task<JsonResult> CheckPhone(string phone)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IUsers users = new UsersRepository(db);
+                var phoneApi = new CleanClientAsync(Environment.GetEnvironmentVariable("DADATA_API_TOKEN"), Environment.GetEnvironmentVariable("DADATA_SECRET"));
+                var result = await phoneApi.Clean<Phone>(phone);
+                if(result.qc_conflict == "2" || result.qc_conflict == "3")
+                {
+                    logger.LogWarning($"Город или регион адреса телефона {result.source} отличаются. Город: {result.city}, регион: {result.region}.");
+                }
+                if(result.qc == "0" || result.qc == "7")
+                {
+                    return Json(true);
+                }
+                else if (result.qc == "2")
+                {
+                    return Json(false);
+                }
+                else if (result.qc == "1")
+                {
+                    logger.LogWarning($"Телефон распознан с допущениями или не распознан. Просьба проверить телефон {result.source} в ручную.");
+                    return Json($"Телефон распознан с допущениями или не распознан.");
+                }
+                else if (result.qc == "3")
+                {
+                    logger.LogWarning($"Обнаружено несколько телефонов, распознан первый. Просьба проверить телефон {result.source} в ручную.");
+                    return Json($"Обнаружено несколько телефонов, распознан первый. Просьба проверить телефон {result.source} в ручную.");
+                }
+                return Json(false);
+            }
+        }
+        [AcceptVerbs("GET", "POST")]
+        public async Task<JsonResult> CheckPasswords(string password, string confirm_password)
+        {
+            if(password == confirm_password) 
+            { 
+                return Json(true); 
+            }
+            else
+            {
+                return Json(false);
             }
         }
         [Route("User/Login")]
@@ -157,16 +204,27 @@ namespace Silerium.Controllers
                         var claims = new List<Claim>
                         {
                             new Claim(ClaimTypes.Name, user.Email),
-                            new Claim(ClaimTypes.Role, "Client")
+                            new Claim(ClaimTypes.Role, user.Role)
                         };
                         ClaimsIdentity claimsIdentity;
                         ClaimsPrincipal claimsPrincipal;
 
-                        if (userLoginVM.RememberMe) //Use cookies authentication
+                        if (userLoginVM.RememberMe) //Use cookies and jwt authentication
                         {
                             claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                             claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
                             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+                            string? token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                            if (token != null)
+                                jwt = new JwtSecurityTokenHandler().ReadToken(token);
+                            else
+                                jwt = new JwtSecurityToken(
+                                issuer: JWTAuthOptions.ISSUER,
+                                audience: JWTAuthOptions.AUDIENCE,
+                                claims: claims,
+                                expires: DateTime.UtcNow.AddMinutes(1),
+                                signingCredentials: new SigningCredentials(JWTAuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
+                                );
                             if (Url.IsLocalUrl(returnUrl))
                             {
                                 return Redirect(returnUrl ?? "/");
@@ -208,12 +266,12 @@ namespace Silerium.Controllers
                     {
                         if (users.FindSetByCondition(u => u.Password == userLoginVM.Password).Count() == 0)
                         {
-                            TempData["Wrong Password"] = "Неверный пароль";
+                            TempData["Wrong Password"] = "Неверный пароль.";
                             return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                         }
                         else if (users.FindSetByCondition(u => u.Email == userLoginVM.Email).Count() == 0)
                         {
-                            TempData["Wrong Email"] = "Неверный email";
+                            TempData["Wrong Email"] = "Неверный email.";
                             return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                         }
                         else
@@ -226,7 +284,7 @@ namespace Silerium.Controllers
             }
             else
             {
-                ModelState.AddModelError("ModelState Invalid", "Заполненные данные не верны");
+                ModelState.AddModelError("ModelState Invalid", "Заполненные данные не верны.");
                 return RedirectToAction("Login", "User");
             }
         }
@@ -249,47 +307,41 @@ namespace Silerium.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (userRegisterVM.Password == userRegisterVM.ConfirmPassword)
+                using (var db = new ApplicationDbContext(connectionString))
                 {
-                    using (var db = new ApplicationDbContext(connectionString))
+                    IUsers users = new UsersRepository(db);
+                    User user = new User
                     {
-                        IUsers users = new UsersRepository(db);
-                        User user = new User
-                        {
-                            Name = userRegisterVM.Name,
-                            Surname = userRegisterVM.Surname,
-                            Password = userRegisterVM.Password,
-                            Email = userRegisterVM.Email,
-                            BirthDate = userRegisterVM.BirthDate,
-                            Country = userRegisterVM.Country,
-                            Phone = userRegisterVM.Phone,
-                            HomeAdress = userRegisterVM.HomeAdress
-                        };
+                        Name = userRegisterVM.Name,
+                        Surname = userRegisterVM.Surname,
+                        Password = userRegisterVM.Password,
+                        Email = userRegisterVM.Email,
+                        BirthDate = userRegisterVM.BirthDate,
+                        Country = userRegisterVM.Country,
+                        Phone = userRegisterVM.Phone,
+                        HomeAdress = userRegisterVM.HomeAdress,
+                        Role = "Client"
+                    };
 
-                        byte[] imageData;
-                        if (userRegisterVM.PfpFile != null)
+                    byte[] imageData;
+                    if (userRegisterVM.PfpFile != null)
+                    {
+                        using (var stream = new BinaryReader(userRegisterVM.PfpFile.OpenReadStream()))
                         {
-                            using (var stream = new BinaryReader(userRegisterVM.PfpFile.OpenReadStream()))
-                            {
-                                imageData = stream.ReadBytes((int)userRegisterVM.PfpFile.Length);
-                            }
+                            imageData = stream.ReadBytes((int)userRegisterVM.PfpFile.Length);
                         }
-                        else
-                        {
-                            string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\images") + "\\default_user.png";
-                            imageData = System.IO.File.ReadAllBytes(path);
-                        }
-                        user.ProfilePicture = imageData;
-
-                        users.Create(user);
-                        users.Save();
-
-                        return RedirectToAction("Login", "User", new { returnUrl });
                     }
-                }
-                else
-                {
-                    return RedirectToAction("Register", "User", new { error = "Пароли должны совпадать" });
+                    else
+                    {
+                        string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\images") + "\\default_user.png";
+                        imageData = System.IO.File.ReadAllBytes(path);
+                    }
+                    user.ProfilePicture = imageData;
+
+                    users.Create(user);
+                    users.Save();
+
+                    return RedirectToAction("Login", "User", new { returnUrl });
                 }
             }
             else
@@ -299,7 +351,7 @@ namespace Silerium.Controllers
                 {
                     logger.LogError(error.Errors.FirstOrDefault().ErrorMessage);
                 }
-                return RedirectToAction("Register", "User", new { error = "Заполненные данные не верны" });
+                return RedirectToAction("Register", "User", new { error = "Заполненные данные не верны." });
             }
         }
         [HttpPost]

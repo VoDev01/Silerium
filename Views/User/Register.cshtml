@@ -2,11 +2,9 @@
 @{
     ViewData["title"] = "Регистрация";
 }
-@section Scripts
-{
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-}
+
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
 
 <h2 class="text-center">Регистрация</h2>
 <div class="container" style="width: 500px;">
@@ -28,16 +26,13 @@
         </div>
         <div class="mb-3">
             <label class="form-label" asp-for="Password">Пароль</label>
-            <input class="form-control" type="password" asp-for="Password" />
+            <input class="form-control" type="password" asp-for="Password" name="password" />
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
         <div class="mb-3">
             <label class="form-label" asp-for="ConfirmPassword">Повторите пароль</label>
-            <input class="form-control" type="password" asp-for="ConfirmPassword" />
-            @if (ViewData.ModelState["ServerError"] != null)
-            {
-                <span class="text-danger">@ViewData.ModelState["ServerError"].Errors.FirstOrDefault().ErrorMessage</span>
-            }
+            <input class="form-control" type="password" asp-for="ConfirmPassword" name="confirm_password"/>
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
         </div>
         <div class="mb-3">
             <label class="form-label" asp-for="BirthDate">День рождения</label>
@@ -64,6 +59,10 @@
             <input class="form-control" type="file" asp-for="PfpFile" />
             <span asp-validation-for="PfpFile" class="text-danger"></span>
         </div>
+        @if (ViewData.ModelState["ServerError"] != null)
+        {
+            <span class="text-danger">@ViewData.ModelState["ServerError"].Errors.FirstOrDefault().ErrorMessage</span>
+        }
         <input hidden name="returnUrl" value="@Model.ReturnUrl"/>
         <button class="btn btn-outline-primary mb-3" type="submit">Зарегистрироваться</button>
     </form>
