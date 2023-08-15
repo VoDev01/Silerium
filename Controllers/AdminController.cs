@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
@@ -19,6 +22,16 @@ namespace Silerium.Controllers
                 .Build();
             connectionString = configuration.GetConnectionString("Default");
             this.logger = logger;
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
+        public PartialViewResult LogoutAdminUser()
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IUsers users = new UsersRepository(db);
+                return PartialView("~/Views/Shared/_LogoutUser.cshtml", users.FindSetByCondition(u => u.Email == HttpContext.User.Identity.Name).FirstOrDefault());
+            }
         }
 
         // GET: AdminController
@@ -388,6 +401,14 @@ namespace Silerium.Controllers
             {
                 logger.LogError(e.Message);
                 return View();
+            }
+        }
+        public IActionResult LoggedInUsers()
+        {
+            using(var db = new ApplicationDbContext(connectionString))
+            {
+                IUsers users = new UsersRepository(db);
+                return View(users.FindSetByCondition(u => u.LoggedIn).ToList());
             }
         }
     }

@@ -43,6 +43,7 @@
     </style>
     <form class="form-inline" asp-action="Logout" asp-controller="User">
         <a class="btn btn-outline-secondary text-decoration-none" asp-action="EditProfile" asp-controller="User">Редактировать профиль</a>
+        <input hidden name="id" value="@Model.User.Id" />
         <button type="submit" class="btn btn-link btn-outline-danger text-decoration-none" id="logout">Выйти из профиля</button>
     </form>
 </div>

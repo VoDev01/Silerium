@@ -228,6 +228,8 @@ namespace Silerium.Controllers
                                 );
                             if (Url.IsLocalUrl(returnUrl))
                             {
+                                user.LoggedIn = true;
+                                users.Save();
                                 return Redirect(returnUrl ?? "/");
                             }
                             else
@@ -254,6 +256,8 @@ namespace Silerium.Controllers
                             if (Url.IsLocalUrl(returnUrl))
                             {
                                 HttpContext.Session.SetString("access_token", new JwtSecurityTokenHandler().WriteToken(jwt));
+                                user.LoggedIn = true;
+                                users.Save();
                                 return Redirect(returnUrl ?? "/");
                             }
                             else
@@ -364,11 +368,17 @@ namespace Silerium.Controllers
             }
         }
         [HttpPost]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout(int id)
         {
-            HttpContext.Session.Remove("access_token");
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Index", "Home");
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IUsers users = new UsersRepository(db);
+                users.GetByID(id).LoggedIn = false;
+                HttpContext.Session.Remove("access_token");
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                users.Save();
+                return RedirectToAction("Index", "Home");
+            }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult ShopCart(string order_status = "ISSUING")

@@ -54,3 +54,9 @@ body {
 .ad-text {
     height: 800px;
 }
+#logout {
+    color: #ccc;
+}
+#logout:hover {
+    color: black;
+}

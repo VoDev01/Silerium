@@ -1,0 +1,5 @@
+﻿@model Silerium.Models.User
+<form class="form-inline" asp-action="Logout" asp-controller="User">
+    <input hidden name="id" value="@Model.Id" />
+    <button type="submit" class="nav-link d-block btn btn-link" id="logout">Выйти</button>
+</form>
