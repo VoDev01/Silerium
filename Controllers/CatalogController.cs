@@ -191,6 +191,7 @@ namespace Silerium.Controllers
                         as ProductsFiltersDTO;
                     if (productsFiltersDTO != null)
                     {
+                        logger.LogInformation($"User {user.Email} added product {product.Name} to cart in quantity of {amount} pcs.");
                         return RedirectToAction("Products", "Catalog", new
                         {
                             category_name = productsFiltersDTO.CategoryName,
@@ -201,7 +202,7 @@ namespace Silerium.Controllers
                     }
                     else
                     {
-                        logger.LogError("Error getting products filters at add to cart page.");
+                        logger.LogError("Error getting products filters at \"AddToCart\" page.");
                         return RedirectToAction("Index", "Categories");
                     }
                 }
