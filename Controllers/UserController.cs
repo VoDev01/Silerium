@@ -210,22 +210,13 @@ namespace Silerium.Controllers
                         ClaimsIdentity claimsIdentity;
                         ClaimsPrincipal claimsPrincipal;
 
-                        if (userLoginVM.RememberMe) //Use cookies and jwt authentication
+                        if (userLoginVM.RememberMe) //Use cookies authentication
                         {
                             claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                             claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
                             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
-                            string? token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-                            if (token != null)
-                                jwt = new JwtSecurityTokenHandler().ReadToken(token);
-                            else
-                                jwt = new JwtSecurityToken(
-                                issuer: JWTAuthOptions.ISSUER,
-                                audience: JWTAuthOptions.AUDIENCE,
-                                claims: claims,
-                                expires: DateTime.UtcNow.AddMinutes(1),
-                                signingCredentials: new SigningCredentials(JWTAuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
-                                );
+
                             if (Url.IsLocalUrl(returnUrl))
                             {
                                 return Redirect(returnUrl ?? "/");
