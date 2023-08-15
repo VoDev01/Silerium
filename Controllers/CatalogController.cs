@@ -171,7 +171,7 @@ namespace Silerium.Controllers
                 IProducts products = new ProductsRepository(db);
                 IOrders orders = new OrdersRepository(db); 
                 IUsers users = new UsersRepository(db);
-                string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
+                string userEmail = HttpContext.User.FindFirstValue("Name");
                 User? user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
                 if (user != null)
                 {

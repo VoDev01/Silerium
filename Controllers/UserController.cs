@@ -38,7 +38,7 @@ namespace Silerium.Controllers
             {
                 IUsers users = new UsersRepository(db);
                 UserViewModel userViewModel = new UserViewModel();
-                string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
+                string userEmail = HttpContext.User.FindFirstValue("Name");
                 userViewModel.User = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
                 return View(userViewModel);
             }
@@ -88,7 +88,7 @@ namespace Silerium.Controllers
                         IUsers users = new UsersRepository(db);
                         UserViewModel userVM = new UserViewModel();
                         User? user = null;
-                        string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
+                        string userEmail = HttpContext.User.FindFirstValue("Name");
                         user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
                         if (user != null)
                             userVM.User = user;
@@ -204,8 +204,8 @@ namespace Silerium.Controllers
                         SecurityToken jwt;
                         var claims = new List<Claim>
                         {
-                            new Claim(ClaimTypes.Name, user.Email),
-                            new Claim(ClaimTypes.Role, user.Role)
+                            new Claim("Name", user.Email),
+                            new Claim("Role", user.Role)
                         };
                         ClaimsIdentity claimsIdentity;
                         ClaimsPrincipal claimsPrincipal;
