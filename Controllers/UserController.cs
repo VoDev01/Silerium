@@ -228,7 +228,7 @@ namespace Silerium.Controllers
                                 );
                             if (Url.IsLocalUrl(returnUrl))
                             {
-                                user.LoggedIn = true;
+                                user.IsOnline = true;
                                 users.Save();
                                 return Redirect(returnUrl ?? "/");
                             }
@@ -256,7 +256,7 @@ namespace Silerium.Controllers
                             if (Url.IsLocalUrl(returnUrl))
                             {
                                 HttpContext.Session.SetString("access_token", new JwtSecurityTokenHandler().WriteToken(jwt));
-                                user.LoggedIn = true;
+                                user.IsOnline = true;
                                 users.Save();
                                 return Redirect(returnUrl ?? "/");
                             }
@@ -373,7 +373,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IUsers users = new UsersRepository(db);
-                users.GetByID(id).LoggedIn = false;
+                users.GetByID(id).IsOnline = false;
                 HttpContext.Session.Remove("access_token");
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 users.Save();

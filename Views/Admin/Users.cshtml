@@ -1,0 +1,103 @@
+﻿@model List<Silerium.Models.User>
+@{
+    ViewData["Title"] = "Пользователи";
+    Layout = "_AdminPanelLayout";
+}
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayName("Id")
+            </th>
+            <th>
+                @Html.DisplayName("Имя")
+            </th>
+            <th>
+                @Html.DisplayName("Фамилия")
+            </th>
+            <th>
+                @Html.DisplayName("Пароль")
+            </th>
+            <th>
+                @Html.DisplayName("Email")
+            </th>
+            <th>
+                @Html.DisplayName("День рождения")
+            </th>
+            <th>
+                @Html.DisplayName("Страна")
+            </th>
+            <th>
+                @Html.DisplayName("Город")
+            </th>
+            <th>
+                @Html.DisplayName("Номер телефона")
+            </th>
+            <th>
+                @Html.DisplayName("В сети")
+            </th>
+            <th>
+                @Html.DisplayName("Роль")
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {   
+            <tr>
+                <td>
+                    @user.Id
+                </td>
+                <td>
+                    @user.Name
+                </td>
+                <td>
+                    @user.Surname
+                </td>
+                <td>
+                    @user.Password
+                </td>
+                <td>
+                    @user.Email
+                </td>
+                <td>
+                    @if(user.BirthDate != null)
+                    {
+                        <p>@DateOnly.FromDateTime((DateTime)user.BirthDate)</p> 
+                    }
+                    else
+                    {
+                        <p>Нет</p>
+                    }
+                </td>
+                <td>
+                    @user.Country
+                </td>
+                <td>
+                    @if(user.City != null)
+                    {
+                        @user.City
+                    }
+                    else
+                    {
+                        <p>Нет</p>
+                    }
+                </td>
+                <td>
+                    @{var phone = user.Phone ?? "Нет";}
+                    @phone
+                </td>
+                <td>
+                    @{var onlineString = user.IsOnline ? "Да" : "Нет";}
+                    @onlineString
+                </td>
+                <td>
+                    @user.Role
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<form asp-action="UpdateUsers" asp-controller="Admin">
+    <button type="submit" class="btn btn-primary">Обновить</button>
+</form>

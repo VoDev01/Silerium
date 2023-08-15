@@ -180,7 +180,7 @@ namespace Silerium.Controllers
                     {
                         Product = product,
                         OrderAmount = amount,
-                        OrderDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                        OrderDate = DateTime.UtcNow,
                         TotalPrice = amount * product.PriceRub,
                         OrderStatus = OrderStatus.ISSUING,
                         User = user

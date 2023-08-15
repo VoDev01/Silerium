@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
@@ -22,16 +23,6 @@ namespace Silerium.Controllers
                 .Build();
             connectionString = configuration.GetConnectionString("Default");
             this.logger = logger;
-        }
-
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
-        public PartialViewResult LogoutAdminUser()
-        {
-            using (var db = new ApplicationDbContext(connectionString))
-            {
-                IUsers users = new UsersRepository(db);
-                return PartialView("~/Views/Shared/_LogoutUser.cshtml", users.FindSetByCondition(u => u.Email == HttpContext.User.Identity.Name).FirstOrDefault());
-            }
         }
 
         // GET: AdminController
@@ -403,12 +394,40 @@ namespace Silerium.Controllers
                 return View();
             }
         }
-        public IActionResult LoggedInUsers()
+        public IActionResult Users()
         {
             using(var db = new ApplicationDbContext(connectionString))
             {
                 IUsers users = new UsersRepository(db);
-                return View(users.FindSetByCondition(u => u.LoggedIn).ToList());
+                return View(users.GetAll().ToList());
+            }
+        }
+        [HttpPost]
+        public IActionResult UpdateUsers()
+        {
+            return RedirectToAction("Users", "Admin");
+        }
+        public IActionResult Orders()
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IOrders orders = new OrdersRepository(db);
+                IEnumerable<Order> orderModel = orders.GetAllWithInclude(o => o.User).Include(o => o.Product).ToList();
+                return View(orderModel);
+            }
+        }
+        [HttpPost]
+        public IActionResult UpdateOrders()
+        {
+            return RedirectToAction("Orders", "Admin");
+        }
+        public IActionResult OrderDetails(string orderid)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IOrders orders = new OrdersRepository(db);
+                var guid = new Guid(orderid);
+                return View(orders.GetAllWithInclude(o => o.User).Include(o => o.Product).Where(u => u.OrderId == guid).ToList().FirstOrDefault());
             }
         }
     }
