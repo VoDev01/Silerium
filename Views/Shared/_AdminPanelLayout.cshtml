@@ -11,58 +11,46 @@
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow align-content-end">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index" style="font-size: 28px;">Silerium</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-end">
-                    <div class="navbar-nav">
-                        @if (this.User.Identity.IsAuthenticated || this.Context.Request.Cookies["UserAuthCookie"] != null)
-                        {
-                            <a class="nav-item nav-link text-black text-decoration-none" asp-controller="User" asp-action="ShopCart">
-                                Корзина
-                                <i class="bi bi-cart"></i>
+    <nav class="navbar navbar-light border-bottom box-shadow align-content-end">
+        <div class="container-fluid">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index" style="font-size: 28px;">Silerium</a>
+        </div>
+    </nav>
+    <div class="container-fluid h-100 g-0">
+        <main role="main" class="pb-3 h-100">
+            <div class="row flex-column flex-lg-row h-100 g-0">
+                <div class="toolbar col col-lg-4 col-xl-3 h-100">
+                    <ul class="nav flex-column">
+                        <li class ="nav-item mb-1">
+                            <h2 class="text-center">Админ панель</h2>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link d-block" asp-action="Categories" asp-controller="Admin">Категории</a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link d-block" asp-action="Subcategories" asp-controller="Admin">Подкатегории</a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link d-block" asp-action="Products" asp-controller="Admin">Товары</a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link d-block" asp-action="Users" asp-controller="Admin">Пользователи</a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link d-block" asp-action="Media" asp-controller="Admin">Медиа</a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link d-block" asp-action="Orders" asp-controller="Admin">Заказы</a>
+                        </li>
+                        <li class ="nav-item mb-1">
+                            <a class="nav-link text-black text-decoration-none" asp-controller="User" asp-action="Profile">
+                                Личный кабинет
+                                <i class="bi bi-box-arrow-in-right"></i>
                             </a>
-                        }
-                        <a class="nav-item nav-link text-black text-decoration-none" asp-controller="User" asp-action="Profile">
-                            Личный кабинет
-                            <i class="bi bi-box-arrow-in-right"></i>
-                        </a>
-                    </div>
+                        </li>
+                    </ul>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container-fluid g-0">
-        <main role="main" class="pb-3">
-            <div class="row flex-column flex-sm-row g-0">
-                <div class="col col-md-6 col-lg-4 col-xl-2 ">
-                    <div class="toolbar panel">
-                        <h2 class="text-center">Админ панель</h2>
-                        <ul class="nav flex-column">
-                            <li class="nav-item mb-2">
-                                <a class="nav-link d-block" asp-action="Categories" asp-controller="Admin">Категории</a>
-                            </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link d-block" asp-action="Subcategories" asp-controller="Admin">Подкатегории</a>
-                            </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link d-block" asp-action="Products" asp-controller="Admin">Товары</a>
-                            </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link d-block" asp-action="Users" asp-controller="Admin">Пользователи</a>
-                            </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link d-block" asp-action="Orders" asp-controller="Admin">Заказы</a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col col-md-6 col-lg-8 col-xl-10 px-3">
+                <div class="col col-lg-8 col-xl-9 px-3">
                     @RenderBody()
                 </div>
             </div>

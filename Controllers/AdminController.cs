@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.IIS.Core;
 using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
@@ -64,12 +65,12 @@ namespace Silerium.Controllers
                             "wwwroot",
                             "images",
                             "categories",
-                            $"category_{num}.jpg"
+                            $"category_{num}{Path.GetExtension(categoryVM.FormImage.FileName)}"
                             )))
                     {
                         categoryVM.FormImage.CopyTo(fstream);
+                        categoryVM.Category.Image = "\\" + Path.Combine("images", "categories", Path.GetFileName(fstream.Name));
                         fstream.Flush();
-                        categoryVM.Category.Image = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                     }
                     categories.Create(categoryVM.Category);
                     categories.Save();
@@ -111,13 +112,15 @@ namespace Silerium.Controllers
                     using (var fstream = System.IO.File.Create(
                         Path.Combine(
                             Directory.GetCurrentDirectory(),
-                            "/wwwroot/images/categories/",
-                            $"category_{categoryVM.Category.Id}.jpg"
+                            "wwwroot",
+                            "images",
+                            "categories",
+                            $"category_{categoryVM.Category.Id}{Path.GetExtension(categoryVM.FormImage.FileName)}"
                             )))
                     {
                         categoryVM.FormImage.CopyTo(fstream);
+                        categoryVM.Category.Image = "\\" + Path.Combine("images", "categories", Path.GetFileName(fstream.Name));
                         fstream.Flush();
-                        categoryVM.Category.Image = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                     }
                     category = categoryVM.Category;
                     categories.Save();
@@ -206,12 +209,12 @@ namespace Silerium.Controllers
                             "wwwroot",
                             "images",
                             "subcategories",
-                            $"subcategory_{num}.jpg"
+                            $"subcategory_{num}{Path.GetExtension(subcategoryVM.FormImage.FileName)}"
                             )))
                     {
                         subcategoryVM.FormImage.CopyTo(fstream);
+                        subcategoryVM.Subcategory.Image = "\\" + Path.Combine("images", "subcategories", Path.GetFileName(fstream.Name));
                         fstream.Flush();
-                        subcategoryVM.Subcategory.Image = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                     }
 
                     subcategories.Create(subcategoryVM.Subcategory);
@@ -256,12 +259,12 @@ namespace Silerium.Controllers
                             "wwwroot",
                             "images",
                             "subcategories",
-                            $"subcategory_{num}.jpg"
+                            $"subcategory_{num}{Path.GetExtension(subcategoryVM.FormImage.FileName)}"
                             )))
                     {
                         subcategoryVM.FormImage.CopyTo(fstream);
+                        subcategoryVM.Subcategory.Image = "\\" + Path.Combine("images", "subcategories", Path.GetFileName(fstream.Name));
                         fstream.Flush();
-                        subcategoryVM.Subcategory.Image = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                     }
                     subcategory = subcategoryVM.Subcategory;
                     subcategories.Save();
@@ -367,12 +370,12 @@ namespace Silerium.Controllers
                             "wwwroot",
                             "images",
                             "products",
-                            $"product_{imageId}{productVM.Product.Id}"
+                            $"product_{imageId}{productVM.Product.Id}{Path.GetExtension(formImage.FileName)}"
                             )))
                         {
                             formImage.CopyTo(fstream);
+                            imagePath = "\\" + Path.Combine("images", "products", Path.GetFileName(fstream.Name));
                             fstream.Flush();
-                            imagePath = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                         }
                         productVM.Product.Images.Add(new ProductImage { Image = imagePath });
                         imageId++;
@@ -385,6 +388,89 @@ namespace Silerium.Controllers
                     productVM.Product.Subcategory = subcategories.GetByID(product_subcategory - 1);
                     products.Create(productVM.Product);
                     products.Save();
+                    return RedirectToAction("Products", "Admin");
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return View();
+            }
+        }
+        public IActionResult EditProduct(int id)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IProducts products = new ProductsRepository(db);
+                    Product product = products.GetByID(id - 1);
+                    return View(product);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return View();
+            }
+        }
+        [HttpPost]
+        public IActionResult EditProduct(Product product)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IProducts products = new ProductsRepository(db);
+                    Product productDB = products.GetByID(product.Id - 1);
+                    productDB = product;
+                    products.Save();
+                    return View(product);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return View();
+            }
+        }
+        public IActionResult DeleteProduct(int id)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IProducts products = new ProductsRepository(db);
+                    Product product = products.GetByID(id - 1);
+                    return View(product);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return View();
+            }
+        }
+        [HttpPost]
+        public IActionResult DeletProductPost(int id)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IProducts products = new ProductsRepository(db);
+                    IPages pages = new PagesRepository(db);
+                    Product product = products.GetByID(id - 1);
+                    Page page = pages.FindSetByCondition(p => p.Products.Contains(product)).FirstOrDefault() 
+                        ?? pages.FindSetByCondition(p => p.Id == CatalogController.CurrentPageIndex).FirstOrDefault();
+                    products.Delete(product);
+                    products.Save();
+                    page.Products.Remove(product);
+                    if (page.Products.Count <= 0)
+                    {
+                        pages.Delete(page);
+                        pages.Save();
+                    }
                     return RedirectToAction("Products", "Admin");
                 }
             }

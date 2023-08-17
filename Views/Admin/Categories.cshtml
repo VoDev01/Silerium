@@ -4,8 +4,12 @@
     ViewData["Title"] = "Категории товаров";
     Layout = "_AdminPanelLayout";
 }
-
 <div class="mx-3">
+
+    <form style="width: 200px; margin-bottom: 15px;" asp-action="SearchCategories" asp-controller="Admin">
+        <label class="form-label" for="searchCategories">Поиск</label>
+        <input type="search" class="form-control" name="searchCategories" id="searchCategories" />
+    </form>
     <h1>Категории</h1>
     
     <p>

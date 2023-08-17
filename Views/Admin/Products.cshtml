@@ -1,10 +1,16 @@
-﻿@model IEnumerable<Silerium.Models.Product>
+﻿﻿@using System.Globalization
+@model IEnumerable<Silerium.Models.Product>
 
 @{
     ViewData["Title"] = "Товары";
     Layout = "_AdminPanelLayout";
 }
 <div class="mx-3">
+
+    <form style="width: 200px; margin-bottom: 15px;" asp-action="SearchProducts" asp-controller="Admin">
+        <label class="form-label" for="searchProducts">Поиск</label>
+        <input type="search" class="form-control" name="searchProducts" id="searchProducts" />
+    </form>
     <h1>Товары</h1>
     
     <p>
@@ -43,26 +49,26 @@
                     @Html.DisplayFor(modelItem => item.Description)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.PriceRub)<span>&#8381;</span>
+                    <span>@item.PriceRub.ToString("N1", CultureInfo.CreateSpecificCulture("ru-RU")) &#8381;</span>
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.StockAmount)<span>шт.</span>
                 </td>
                 <td>
-                        @if (item.Available)
-                        {
-                            Html.Display("Да");
-                        }
-                        else
-                        {
-                            Html.Display("Нет");
-                        }
+                    @if (item.Available)
+                    {
+                        <p>Да</p>
+                    }
+                    else
+                    {
+                        <p>Нет</p>
+                    }
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Subcategory.Name)
                 </td>
                 <td>
-                    <a asp-action="EdiProduct" asp-route-id="@item.Id" class="btn btn-warning">Редактировать</a>
+                    <a asp-action="EditProduct" asp-route-id="@item.Id" class="btn btn-warning">Редактировать</a>
                     <a asp-action="DeleteProduct" asp-route-id="@item.Id" class="btn btn-danger">Удалить</a>
                 </td>
             </tr>
