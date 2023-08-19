@@ -55,7 +55,9 @@ app.UseForwardedHeaders(options: new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
+
 app.UseJWTAuthorizationMiddleware();
+app.UseSuperAdminClaimsMiddleware();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

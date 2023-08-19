@@ -1,7 +1,8 @@
-﻿using Silerium.Data;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
-using Silerium.Models.Repositories;
+using Silerium.ViewModels;
+using System.Reflection;
 using System.Security.Claims;
 
 namespace Silerium.Services
@@ -18,6 +19,22 @@ namespace Silerium.Services
                 $"Permission.{modelName}.Delete",
                 $"Permission.{modelName}.DownloadData"
             };
+        }
+        public static void GetPermissions(List<RoleClaimViewModel> roleClaimVM, Type policy)
+        {
+            FieldInfo[] fields = policy.GetFields(BindingFlags.Static| BindingFlags.Public);
+            foreach(var fieldInfo in fields) 
+            {
+                roleClaimVM.Add(new RoleClaimViewModel { Value = fieldInfo.GetValue(null).ToString(), Type = "Permission" });
+            }
+        }
+        public static async Task AddPermissionClaim(ClaimsIdentity user, string permission)
+        {
+            var userClaims = user.Claims;
+            if(!userClaims.Any(u => u.Type == "Permission" && u.Value == permission))
+            {
+                user.AddClaim(new Claim("Permission", permission));
+            }
         }
     }
 }
