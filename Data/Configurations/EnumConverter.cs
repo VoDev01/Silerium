@@ -4,11 +4,11 @@ using System.Linq.Expressions;
 
 namespace Silerium.Data.Configurations
 {
-    public class OrderStatusConverter : ValueConverter<OrderStatus, string>
+    public class EnumConverter<T> : ValueConverter<T, string>
     {
-        public OrderStatusConverter() : base(
+        public EnumConverter() : base(
             str => str.ToString(),
-            os => (OrderStatus)Enum.Parse(typeof(OrderStatus), os))
+            os => (T)Enum.Parse(typeof(T), os))
         {
         }
     }

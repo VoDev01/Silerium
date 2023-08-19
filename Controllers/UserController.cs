@@ -39,7 +39,7 @@ namespace Silerium.Controllers
                 IUsers users = new UsersRepository(db);
                 UserViewModel userViewModel = new UserViewModel();
                 string userEmail = HttpContext.User.FindFirstValue("Name");
-                userViewModel.User = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                userViewModel.User = users.Find(u => u.Email == userEmail).FirstOrDefault();
                 return View(userViewModel);
             }
         }
@@ -90,7 +90,7 @@ namespace Silerium.Controllers
                         UserViewModel userVM = new UserViewModel();
                         User? user = null;
                         string userEmail = HttpContext.User.FindFirstValue("Name");
-                        user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                        user = users.Find(u => u.Email == userEmail).FirstOrDefault();
                         if (user != null)
                             userVM.User = user;
                         else
@@ -98,7 +98,7 @@ namespace Silerium.Controllers
                             logger.LogError($"User with access token {HttpContext.Session.GetString("access_token")} was not authorized");
                             return Unauthorized();
                         }
-                        logger.LogInformation($"User {user.Email} with role {user.Role} authorized.");
+                        logger.LogInformation($"User {user.Email} with role  authorized.");
                         return View(userVM);
                     }
                     catch (Exception e)
@@ -210,8 +210,8 @@ namespace Silerium.Controllers
                         SecurityToken jwt;
                         var claims = new List<Claim>
                         {
-                            new Claim("Name", user.Email),
-                            new Claim("Role", user.Role)
+                            //new Claim("Name", user.Email),
+                            //new Claim("Role", user.Role)
                         };
                         ClaimsIdentity claimsIdentity;
                         ClaimsPrincipal claimsPrincipal;
@@ -264,13 +264,13 @@ namespace Silerium.Controllers
                     }
                     else
                     {
-                        if (users.FindSetByCondition(u => u.Password == userLoginVM.Password).Count() == 0)
+                        if (users.Find(u => u.Password == userLoginVM.Password).Count() == 0)
                         {
                             TempData["Wrong Password"] = "Неверный пароль.";
                             logger.LogInformation($"User {userLoginVM.Email} typed in wrong password {userLoginVM.Password}.");
                             return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                         }
-                        else if (users.FindSetByCondition(u => u.Email == userLoginVM.Email).Count() == 0)
+                        else if (users.Find(u => u.Email == userLoginVM.Email).Count() == 0)
                         {
                             TempData["Wrong Email"] = "Неверный email.";
                             logger.LogInformation($"User {userLoginVM.Email} typed in wrong or non-existent email.");
@@ -330,8 +330,8 @@ namespace Silerium.Controllers
                         Country = userRegisterVM.Country,
                         Phone = userRegisterVM.Phone,
                         HomeAdress = userRegisterVM.HomeAdress,
-                        City = apiResult.location?.value,
-                        Role = "Client"
+                        City = apiResult.location?.value
+                        //Role = "Client"
                     };
 
                     byte[] imageData;
@@ -349,7 +349,7 @@ namespace Silerium.Controllers
                     }
                     user.ProfilePicture = imageData;
 
-                    users.Create(user);
+                    users.Add(user);
                     users.Save();
                     logger.LogInformation($"User {user.Email} registered.");
                     return RedirectToAction("Login", "User", new { returnUrl });
@@ -383,7 +383,7 @@ namespace Silerium.Controllers
                 string? userEmail = HttpContext.User.Identity.Name;
                 if (userEmail != null)
                 {
-                    User user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                    User user = users.Find(u => u.Email == userEmail).FirstOrDefault();
                     var orderStatusVal = Enum.Parse(typeof(OrderStatus), order_status);
                     UserViewModel userVM = new UserViewModel
                     {

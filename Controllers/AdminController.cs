@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
 using Silerium.Models.Repositories;
 using Silerium.ViewModels;
+using System.Data;
 
 namespace Silerium.Controllers
 {
@@ -67,7 +69,7 @@ namespace Silerium.Controllers
                         fstream.Flush();
                         categoryVM.Category.Image = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                     }
-                    categories.Create(categoryVM.Category);
+                    categories.Add(categoryVM.Category);
                     categories.Save();
                     return RedirectToAction("Categories", "Admin");
                 }
@@ -149,7 +151,7 @@ namespace Silerium.Controllers
                 {
                     ICategories categories = new CategoriesRepository(db);
                     ISubcategories subcategories = new SubcategoriesRepository(db);
-                    categories.Delete(category);
+                    categories.Remove(category);
                     categories.Save();
                     return RedirectToAction("Categories", "Admin");
                 }
@@ -210,7 +212,7 @@ namespace Silerium.Controllers
                         subcategoryVM.Subcategory.Image = Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), fstream.Name);
                     }
 
-                    subcategories.Create(subcategoryVM.Subcategory);
+                    subcategories.Add(subcategoryVM.Subcategory);
                     subcategories.Save();
                     return RedirectToAction("Subcategories", "Admin");
                 }
@@ -293,7 +295,7 @@ namespace Silerium.Controllers
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     ISubcategories subcategories = new SubcategoriesRepository(db);
-                    subcategories.Delete(subcategory);
+                    subcategories.Remove(subcategory);
                     subcategories.Save();
                     return RedirectToAction("Subcategories", "Admin");
                 }
@@ -345,7 +347,7 @@ namespace Silerium.Controllers
                     }
                     else
                     {
-                        if (products.FindSetByCondition(p => p.Page.Id == CatalogController.CurrentPageIndex).Count() > CatalogController.productsAtPage)
+                        if (products.Find(p => p.Page.Id == CatalogController.CurrentPageIndex).Count() > CatalogController.productsAtPage)
                             productVM.Product.Page = new Page { Products = new List<Product>() { productVM.Product } };
                         else
                             productVM.Product.Page = pages.GetByID(CatalogController.CurrentPageIndex);
@@ -379,7 +381,7 @@ namespace Silerium.Controllers
                         specifications.Add(new ProductSpecification { Name = specification.Key, Specification = specification.Value });
                     }
                     productVM.Product.Subcategory = subcategories.GetByID(product_subcategory - 1);
-                    products.Create(productVM.Product);
+                    products.Add(productVM.Product);
                     products.Save();
                     return RedirectToAction("Products", "Admin");
                 }
@@ -388,6 +390,307 @@ namespace Silerium.Controllers
             {
                 logger.LogError(e.Message);
                 return View();
+            }
+        }
+        // GET: Roles
+        public async Task<IActionResult> Roles()
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                return roles.GetAll() != null ?
+                            View(await roles.GetAllAsync()) :
+                            Problem("Entity set 'ApplicationDbContext.Roles'  is null.");
+            }
+        }
+
+        // GET: Roles/Create
+        public IActionResult CreateRole()
+        {
+            return View();
+        }
+
+        // POST: Roles/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateRole([Bind("Id,Name")] Role role)
+        {
+            if (ModelState.IsValid)
+            {
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IRoles roles = new RolesRepository(db);
+                    roles.Add(role);
+                    await roles.SaveAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            return View(role);
+        }
+
+        // GET: Roles/Edit/5
+        public async Task<IActionResult> EditRole(int? id)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                if (id == null || roles.GetAll() == null)
+                {
+                    return NotFound();
+                }
+
+                var role = await roles.FindAsync(r => r.Id == id);
+                if (role == null)
+                {
+                    return NotFound();
+                }
+                return View(role);
+            }
+        }
+
+        // POST: Roles/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditRole(int id, [Bind("Id,Name")] Role role)
+        {
+            if (id != role.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    using (var db = new ApplicationDbContext(connectionString))
+                    {
+                        IRoles roles = new RolesRepository(db);
+                        Role oldRole = roles.Find(r => r.Id == role.Id).FirstOrDefault();
+                        oldRole = role;
+                        await roles.SaveAsync();
+                    }
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!RoleExists(role.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(role);
+        }
+
+        // GET: Roles/Delete/5
+        public async Task<IActionResult> DeleteRole(int? id)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                if (id == null || roles.GetAll() == null)
+                {
+                    return NotFound();
+                }
+
+                var role = roles.Find(m => m.Id == id).FirstOrDefault();
+                if (role == null)
+                {
+                    return NotFound();
+                }
+
+                return View(role);
+            }
+        }
+
+        // POST: Roles/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteRoleConfirmed(int id)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                if (roles.GetAll() == null)
+                {
+                    return Problem("Entity set 'ApplicationDbContext.Roles'  is null.");
+                }
+                var role = (await roles.FindAsync(r => r.Id == id)).FirstOrDefault();
+                if (role != null)
+                {
+                    roles.Remove(role);
+                }
+
+                await roles.SaveAsync();
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        private bool RoleExists(int id)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                return roles.IfAny(e => e.Id == id);
+            }
+        }
+        // GET: Permissions
+        public async Task<IActionResult> Permissions()
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IPermissions permissions = new PermissionsRepository(db);
+                return permissions.GetAll() != null ?
+                            View(await permissions.GetAllAsync()) :
+                            Problem("Entity set 'ApplicationDbContext.Permissions'  is null.");
+            }
+        }
+
+        // GET: Permissions/Create
+        public IActionResult CreatePermission()
+        {
+            return View();
+        }
+
+        // POST: Permissions/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePermission([Bind("Id,PermissionName,IsGranted")] Permission permission)
+        {
+            if (ModelState.IsValid)
+            {
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IPermissions permissions = new PermissionsRepository(db);
+                    permissions.Add(permission);
+                    await permissions.SaveAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            return View(permission);
+        }
+
+        // GET: Permissions/Edit/5
+        public async Task<IActionResult> EditPermission(int? id)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IPermissions permissions = new PermissionsRepository(db);
+                if (id == null || permissions.GetAll() == null)
+                {
+                    return NotFound();
+                }
+
+                var permission = await permissions.FindAsync(p => p.Id == id);
+                if (permission == null)
+                {
+                    return NotFound();
+                }
+                return View(permission);
+            }
+        }
+
+        // POST: Permissions/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditPermission(int id, [Bind("Id,PermissionName,IsGranted")] Permission permission)
+        {
+            if (id != permission.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    using (var db = new ApplicationDbContext(connectionString))
+                    {
+                        IPermissions permissions = new PermissionsRepository(db);
+                        Permission oldPermission = permissions.Find(p => p.Id == permission.Id).FirstOrDefault();
+                        oldPermission = permission;
+                        await permissions.SaveAsync();
+                    }
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!PermissionExists(permission.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(permission);
+        }
+
+        // GET: Permissions/Delete/5
+        public async Task<IActionResult> DeletePermission(int? id)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IPermissions permissions = new PermissionsRepository(db);
+                if (id == null || permissions.GetAll() == null)
+                {
+                    return NotFound();
+                }
+
+                var permission = (await permissions.FindAsync(p => p.Id == id))
+                    .FirstOrDefault();
+                if (permission == null)
+                {
+                    return NotFound();
+                }
+
+                return View(permission);
+            }
+        }
+
+        // POST: Permissions/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeletePermissionConfirmed(int id)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IPermissions permissions = new PermissionsRepository(db);
+                if (permissions.GetAll() == null)
+                {
+                    return Problem("Entity set 'ApplicationDbContext.Permissions'  is null.");
+                }
+                var permission = (await permissions.FindAsync(p => p.Id == id)).FirstOrDefault();
+                if (permission != null)
+                {
+                    permissions.Remove(permission);
+                }
+
+                await permissions.SaveAsync();
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        private bool PermissionExists(int id)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IPermissions permissions = new PermissionsRepository(db);
+                return permissions.IfAny(e => e.Id == id);
             }
         }
     }

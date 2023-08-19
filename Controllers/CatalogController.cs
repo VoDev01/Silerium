@@ -172,11 +172,11 @@ namespace Silerium.Controllers
                 IOrders orders = new OrdersRepository(db); 
                 IUsers users = new UsersRepository(db);
                 string userEmail = HttpContext.User.FindFirstValue("Name");
-                User? user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                User? user = users.Find(u => u.Email == userEmail).FirstOrDefault();
                 if (user != null)
                 {
                     Product product = products.GetByID(id - 1);
-                    orders.Create(new Order
+                    orders.Add(new Order
                     {
                         Product = product,
                         OrderAmount = amount,

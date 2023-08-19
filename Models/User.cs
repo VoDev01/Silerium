@@ -1,6 +1,4 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Silerium.Models
 {
@@ -27,9 +25,9 @@ namespace Silerium.Models
         [MaxLength(20)]
         public string? Phone { get; set; }
         public byte[] ProfilePicture { get; set; }
-        [MaxLength(40)]
-        public string Role { get; set; }
+        public bool IsOnline { get; set; }
         public IEnumerable<Order> Orders { get; set; }
         public IEnumerable<Product> Products { get; set; }
+        public List<Role> Roles { get; set; }
     }
 }
