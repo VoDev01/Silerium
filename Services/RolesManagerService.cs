@@ -1,7 +1,4 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Silerium.Models;
-using Silerium.Models.Interfaces;
-using Silerium.ViewModels;
+﻿using Silerium.ViewModels;
 using System.Reflection;
 using System.Security.Claims;
 
@@ -28,12 +25,21 @@ namespace Silerium.Services
                 roleClaimVM.Add(new RoleClaimViewModel { Value = fieldInfo.GetValue(null).ToString(), Type = "Permission" });
             }
         }
+        
         public static async Task AddPermissionClaim(ClaimsIdentity user, string permission)
         {
             var userClaims = user.Claims;
             if(!userClaims.Any(u => u.Type == "Permission" && u.Value == permission))
             {
                 user.AddClaim(new Claim("Permission", permission));
+            }
+        }
+        public static async Task AddRole(ClaimsIdentity user, string role)
+        {
+            var userClaims = user.Claims;
+            if (!userClaims.Any(u => u.Type == "Role" && u.Value == role))
+            {
+                user.AddClaim(new Claim("Role", role));
             }
         }
     }

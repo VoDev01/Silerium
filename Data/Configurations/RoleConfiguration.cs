@@ -15,7 +15,7 @@ namespace Silerium.Data.Configurations
                 j => j
                 .HasOne(rp => rp.Permission)
                 .WithMany(r => r.RolePermissions)
-                .HasForeignKey(rp => rp.Permission),
+                .HasForeignKey(rp => rp.PermissionId),
                 j => j
                 .HasOne(rp => rp.Role)
                 .WithMany(p => p.RolePermissions)

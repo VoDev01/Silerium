@@ -8,7 +8,24 @@ namespace Silerium.Data.Seeds
 {
     public static class DefaultUsers
     {
-        public static async Task<List<Claim>> GenerateSuperAdminClaims(string superAdminEmail, IUsers users, ILogger? logger)
+        public static async Task<List<Claim>?> GenerateUserClaims(string userEmail, IUsers users, ILogger? logger)
+        {
+            if (users.IfAny(u => u.Email == userEmail))
+            {
+                List<Claim> userClaims = new List<Claim>
+                {
+                    new Claim("Name", userEmail),
+                    new Claim("Role", Roles.User.ToString())
+                };
+                return userClaims;
+            }
+            else
+            {
+                logger?.LogError($"No user with {userEmail} email was found in database.");
+                return null;
+            }
+        }
+        public static async Task<List<Claim>?> GenerateSuperAdminClaims(string superAdminEmail, IUsers users, ILogger? logger)
         {
             if (users.IfAny(u => u.Email == superAdminEmail))
             {
@@ -28,23 +45,38 @@ namespace Silerium.Data.Seeds
             }
             else
             {
-                logger?.LogError($"No superadmin with {superAdminEmail} was found in database.");
-                return new List<Claim>();
+                logger?.LogError($"No SuperAdmin with {superAdminEmail} email was found in database.");
+                return null;
             }
         }
-        public static Role SeedSuperAdminRole(DbSet<Permission> permissions)
+        public static Role SeedSuperAdminRole()
+        {
+            List<Permission> permissions = new List<Permission>(); 
+            List<string> permissionsNames = SeedPermissions().ToList();
+            for (int i = 0; i < permissionsNames.Count; i++)
+            {
+                permissions.Add(new Permission { Id = i+1, PermissionName = permissionsNames[i] });
+            }
+            Role role = new Role
+            {
+                Id = 1,
+                Name = Roles.SuperAdmin,
+                Permissions = permissions
+            };
+            return role;
+        }
+        public static Role SeedUserRole()
         {
             Role role = new Role
             {
-                Name = Roles.SuperAdmin,
-                Permissions = permissions.ToList()
+                Id = 2,
+                Name = Roles.User,
             };
             return role;
         }
         public static IEnumerable<string> SeedPermissions()
         {
             var allModelsPermissions = RolesManagerService.GeneratePermissionsForModel("Product")
-                .Concat(RolesManagerService.GeneratePermissionsForModel("Product"))
                 .Concat(RolesManagerService.GeneratePermissionsForModel("Category"))
                 .Concat(RolesManagerService.GeneratePermissionsForModel("Subcategory"))
                 .Concat(RolesManagerService.GeneratePermissionsForModel("User"))

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
 using Silerium.Data.Configurations;
+using Silerium.Data.Convertions;
 using Silerium.Data.Seeds;
 using Silerium.Models;
 using Silerium.Services;
@@ -52,13 +53,27 @@ namespace Silerium.Data
             modelBuilder.ApplyConfiguration(roleConfiguration);
 
             List<Permission> permissions = new List<Permission>();
-            foreach (var permission in DefaultUsers.SeedPermissions())
+            List<string> permissionsNames = DefaultUsers.SeedPermissions().ToList();
+            for (int i = 0; i < permissionsNames.Count; i++)
             {
-                permissions.Add(new Permission { PermissionName = permission });
+                permissions.Add(new Permission { Id = i+1, PermissionName = permissionsNames[i] });
             }
-            
             modelBuilder.Entity<Permission>().HasData(permissions);
-            modelBuilder.Entity<Role>().HasData(DefaultUsers.SeedSuperAdminRole(Permissions));
+
+            Role superAdminRole = DefaultUsers.SeedSuperAdminRole();
+            permissions = superAdminRole.Permissions.ToList();
+            superAdminRole.Permissions = null;
+            modelBuilder.Entity<Role>().HasData(superAdminRole);
+
+            Role userRole = DefaultUsers.SeedUserRole();
+            modelBuilder.Entity<Role>().HasData(userRole);
+
+            List<RolePermissions> rolePermissions = new List<RolePermissions>();
+            for (int i = 0; i < permissions.Count; i++)
+            {
+                rolePermissions.Add(new RolePermissions { RoleId = superAdminRole.Id, PermissionId = permissions[i].Id, Granted = true, GrantedByUser = "Dev" });
+            }
+            modelBuilder.Entity<RolePermissions>().HasData(rolePermissions);
         }
     }
 }

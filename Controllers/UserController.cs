@@ -15,6 +15,7 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using Dadata;
 using Dadata.Model;
+using Silerium.Data.Seeds;
 
 namespace Silerium.Controllers
 {
@@ -208,11 +209,11 @@ namespace Silerium.Controllers
                     if (user != null)
                     {
                         SecurityToken jwt;
-                        var claims = new List<Claim>
+                        List<Claim> claims = await DefaultUsers.GenerateSuperAdminClaims(user.Email, users, logger);
+                        if(claims == null)
                         {
-                            //new Claim("Name", user.Email),
-                            //new Claim("Role", user.Role)
-                        };
+                            claims = await DefaultUsers.GenerateUserClaims(user.Email, users, logger);
+                        }
                         ClaimsIdentity claimsIdentity;
                         ClaimsPrincipal claimsPrincipal;
 
