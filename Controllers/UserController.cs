@@ -227,6 +227,7 @@ namespace Silerium.Controllers
                             if (Url.IsLocalUrl(returnUrl))
                             {
                                 logger.LogInformation($"User {user.Email} logged in using cookies.");
+                                user.IsOnline = true;
                                 return Redirect(returnUrl ?? "/");
                             }
                             else
@@ -253,6 +254,7 @@ namespace Silerium.Controllers
                             if (Url.IsLocalUrl(returnUrl))
                             {
                                 HttpContext.Session.SetString("access_token", new JwtSecurityTokenHandler().WriteToken(jwt));
+                                user.IsOnline = true;
                                 logger.LogInformation($"User {user.Email} logged in using JWT.");
                                 return Redirect(returnUrl ?? "/");
                             }
@@ -366,13 +368,19 @@ namespace Silerium.Controllers
                 return RedirectToAction("Register", "User", new { error = "Заполненные данные не верны." });
             }
         }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            HttpContext.Session.Remove("access_token");
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            logger.LogInformation($"User logged out");
-            return RedirectToAction("Index", "Home");
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IUsers users = new UsersRepository(db);
+                HttpContext.Session.Remove("access_token");
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                logger.LogInformation($"User logged out");
+                users.Find(u => u.Email == HttpContext.User.Identity.Name).FirstOrDefault().IsOnline = false;
+                return RedirectToAction("Index", "Home");
+            }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult ShopCart(string order_status = "ISSUING")

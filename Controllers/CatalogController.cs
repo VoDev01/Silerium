@@ -8,7 +8,7 @@ using Silerium.DTO;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
 using Silerium.Models.Repositories;
-using Silerium.ViewModels;
+using Silerium.ViewModels.ProductsModels;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -116,7 +116,7 @@ namespace Silerium.Controllers
                 if (productsAtPage < _products.Count)
                     _products = _products.GetRange(productsAtPage * (page - 1), productsAtPage);
                 HttpContext.Session.SetString("ProductsFilters", JsonSerializer.Serialize(
-                    new ProductsFiltersDTO
+                    new ProductsFiltersViewModel
                     {
                         CategoryName = category_name,
                         SubcategoryName = subcategory_name,
@@ -186,9 +186,9 @@ namespace Silerium.Controllers
                         User = user
                     });
                     orders.Save();
-                    ProductsFiltersDTO? productsFiltersDTO = 
-                        JsonSerializer.Deserialize(HttpContext.Session.GetString("ProductsFilters") ?? "", typeof(ProductsFiltersDTO)) 
-                        as ProductsFiltersDTO;
+                    ProductsFiltersViewModel? productsFiltersDTO = 
+                        JsonSerializer.Deserialize(HttpContext.Session.GetString("ProductsFilters") ?? "", typeof(ProductsFiltersViewModel)) 
+                        as ProductsFiltersViewModel;
                     if (productsFiltersDTO != null)
                     {
                         logger.LogInformation($"User {user.Email} added product {product.Name} to cart in quantity of {amount} pcs.");

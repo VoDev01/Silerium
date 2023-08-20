@@ -1,4 +1,4 @@
-﻿using Silerium.ViewModels;
+﻿using Silerium.ViewModels.PermissionAuthorizationModels;
 using System.Reflection;
 using System.Security.Claims;
 
