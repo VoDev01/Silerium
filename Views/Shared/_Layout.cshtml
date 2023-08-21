@@ -27,7 +27,7 @@
                                 Корзина
                                 <i class="bi bi-cart"></i>
                             </a>
-                            @if (this.User.IsInRole("Admin"))
+                            @if (this.User.HasClaim("Role", "SuperAdmin"))
                             {
                                 <a class="nav-item nav-link text-black text-decoration-none" asp-controller="Admin" asp-action="Index">
                                     Админ панель

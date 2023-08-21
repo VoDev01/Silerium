@@ -4,14 +4,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
-using Silerium.DTO;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
 using Silerium.Models.Repositories;
-using Silerium.ViewModels;
+using Silerium.ViewModels.ProductsModels;
 using System.Security.Claims;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Silerium.Controllers
 {
@@ -116,7 +114,7 @@ namespace Silerium.Controllers
                 if (productsAtPage < _products.Count)
                     _products = _products.GetRange(productsAtPage * (page - 1), productsAtPage);
                 HttpContext.Session.SetString("ProductsFilters", JsonSerializer.Serialize(
-                    new ProductsFiltersDTO
+                    new ProductsFiltersViewModel
                     {
                         CategoryName = category_name,
                         SubcategoryName = subcategory_name,
@@ -171,12 +169,12 @@ namespace Silerium.Controllers
                 IProducts products = new ProductsRepository(db);
                 IOrders orders = new OrdersRepository(db); 
                 IUsers users = new UsersRepository(db);
-                string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
-                User? user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                string userEmail = HttpContext.User.FindFirstValue("Name");
+                User? user = users.Find(u => u.Email == userEmail).FirstOrDefault();
                 if (user != null)
                 {
                     Product product = products.GetByID(id - 1);
-                    orders.Create(new Order
+                    orders.Add(new Order
                     {
                         Product = product,
                         OrderAmount = amount,
@@ -186,11 +184,12 @@ namespace Silerium.Controllers
                         User = user
                     });
                     orders.Save();
-                    ProductsFiltersDTO? productsFiltersDTO = 
-                        JsonSerializer.Deserialize(HttpContext.Session.GetString("ProductsFilters") ?? "", typeof(ProductsFiltersDTO)) 
-                        as ProductsFiltersDTO;
+                    ProductsFiltersViewModel? productsFiltersDTO = 
+                        JsonSerializer.Deserialize(HttpContext.Session.GetString("ProductsFilters") ?? "", typeof(ProductsFiltersViewModel)) 
+                        as ProductsFiltersViewModel;
                     if (productsFiltersDTO != null)
                     {
+                        logger.LogInformation($"User {user.Email} added product {product.Name} to cart in quantity of {amount} pcs.");
                         return RedirectToAction("Products", "Catalog", new
                         {
                             category_name = productsFiltersDTO.CategoryName,
@@ -201,7 +200,7 @@ namespace Silerium.Controllers
                     }
                     else
                     {
-                        logger.LogError("Error getting products filters at add to cart page.");
+                        logger.LogError("Error getting products filters at \"AddToCart\" page.");
                         return RedirectToAction("Index", "Categories");
                     }
                 }
