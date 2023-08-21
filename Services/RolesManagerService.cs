@@ -4,6 +4,7 @@ using System.Security.Claims;
 
 namespace Silerium.Services
 {
+    public enum PermissionType { View, Edit, Create, Delete, DownloadData }
     public class RolesManagerService
     {
         public static List<string> GeneratePermissionsForModel(string modelName)
@@ -16,6 +17,10 @@ namespace Silerium.Services
                 $"Permission.{modelName}.Delete",
                 $"Permission.{modelName}.DownloadData"
             };
+        }
+        public static string GeneratePermissionForModel(string modelName, PermissionType permissionType)
+        {
+            return $"Permission.{modelName}.{permissionType}";
         }
         public static void GetPermissions(List<RoleClaimViewModel> roleClaimVM, Type policy)
         {

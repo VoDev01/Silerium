@@ -372,15 +372,15 @@ namespace Silerium.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            using (var db = new ApplicationDbContext(connectionString))
-            {
-                IUsers users = new UsersRepository(db);
+            //using (var db = new ApplicationDbContext(connectionString))
+            //{
+                //IUsers users = new UsersRepository(db);
                 HttpContext.Session.Remove("access_token");
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 logger.LogInformation($"User logged out");
-                users.Find(u => u.Email == HttpContext.User.Identity.Name).FirstOrDefault().IsOnline = false;
+                //users.Find(u => u.Email == HttpContext.User.Identity.Name).FirstOrDefault().IsOnline = false;
                 return RedirectToAction("Index", "Home");
-            }
+            //}
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult ShopCart(string order_status = "ISSUING")

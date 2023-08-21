@@ -422,6 +422,21 @@ namespace Silerium.Migrations
                         new
                         {
                             Id = 2,
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Moderator"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Manager"
+                        },
+                        new
+                        {
+                            Id = 5,
                             Name = "User"
                         });
                 });

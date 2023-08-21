@@ -65,8 +65,10 @@ namespace Silerium.Data
             superAdminRole.Permissions = null;
             modelBuilder.Entity<Role>().HasData(superAdminRole);
 
-            Role userRole = DefaultUsers.SeedUserRole();
-            modelBuilder.Entity<Role>().HasData(userRole);
+            modelBuilder.Entity<Role>().HasData(DefaultUsers.SeedAdminRole());
+            modelBuilder.Entity<Role>().HasData(DefaultUsers.SeedModeratorRole());
+            modelBuilder.Entity<Role>().HasData(DefaultUsers.SeedManagerRole());
+            modelBuilder.Entity<Role>().HasData(DefaultUsers.SeedUserRole());
 
             List<RolePermissions> rolePermissions = new List<RolePermissions>();
             for (int i = 0; i < permissions.Count; i++)

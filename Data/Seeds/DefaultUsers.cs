@@ -35,6 +35,7 @@ namespace Silerium.Data.Seeds
                     new Claim("Role", Roles.SuperAdmin.ToString()),
                     new Claim("Role", Roles.Admin.ToString()),
                     new Claim("Role", Roles.Moderator.ToString()),
+                    new Claim("Role", Roles.Manager.ToString()),
                     new Claim("Role", Roles.User.ToString())
                 };
                 foreach (var permission in SeedPermissions())
@@ -65,11 +66,39 @@ namespace Silerium.Data.Seeds
             };
             return role;
         }
-        public static Role SeedUserRole()
+
+        public static Role SeedAdminRole()
         {
             Role role = new Role
             {
                 Id = 2,
+                Name = Roles.Admin,
+            };
+            return role;
+        }
+        public static Role SeedModeratorRole()
+        {
+            Role role = new Role
+            {
+                Id = 3,
+                Name = Roles.Moderator,
+            };
+            return role;
+        }
+        public static Role SeedManagerRole()
+        {
+            Role role = new Role
+            {
+                Id = 4,
+                Name = Roles.Manager,
+            };
+            return role;
+        }
+        public static Role SeedUserRole()
+        {
+            Role role = new Role
+            {
+                Id = 5,
                 Name = Roles.User,
             };
             return role;

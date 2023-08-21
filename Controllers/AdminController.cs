@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
 using Silerium.Models.Repositories;
-using Silerium.ViewModels;
+using Silerium.Services;
+using Silerium.ViewModels.ProductsModels;
 using System.Data;
 
 namespace Silerium.Controllers
@@ -14,7 +17,8 @@ namespace Silerium.Controllers
     {
         private string connectionString;
         private ILogger<AdminController> logger;
-        public AdminController(ILogger<AdminController> logger)
+        private IAuthorizationService authorizationService;
+        public AdminController(ILogger<AdminController> logger, IAuthorizationService authorizationService)
         {
             IConfiguration configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -22,28 +26,46 @@ namespace Silerium.Controllers
                 .Build();
             connectionString = configuration.GetConnectionString("Default");
             this.logger = logger;
+            this.authorizationService = authorizationService;
         }
 
+        public IActionResult NoPermissions(string permission)
+        {
+            return View(permission + ".");
+        }
         // GET: AdminController
         public IActionResult Index()
         {
             return View();
         }
-
         public IActionResult Categories()
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.View)).Result.Succeeded)
             {
-                ICategories categories = new CategoriesRepository(db);
-                List<Category> categoriesList = categories.GetAllWithInclude(c => c.Subcategories).ToList();
-                return View(categoriesList);
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    ICategories categories = new CategoriesRepository(db);
+                    List<Category> categoriesList = categories.GetAllWithInclude(c => c.Subcategories).ToList();
+                    return View(categoriesList);
+                }
+            }
+            else
+            {
+                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.View) });
             }
         }
 
         // GET: AdminController/Create
         public IActionResult CreateCategory()
         {
-            return View(new CategoryViewModel());
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            {
+                return View(new CategoryViewModel());
+            }
+            else
+            {
+                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
+            }
         }
 
         // POST: AdminController/Create
@@ -85,13 +107,20 @@ namespace Silerium.Controllers
         // GET: AdminController/Edit/5
         public IActionResult EditCategory(int id)
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
             {
-                ICategories categories = new CategoriesRepository(db);
-                Category category = categories.GetByID(id-1);
-                CategoryViewModel categoryVM = new CategoryViewModel();
-                categoryVM.Category = category;
-                return View(categoryVM);
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    ICategories categories = new CategoriesRepository(db);
+                    Category category = categories.GetByID(id-1);
+                    CategoryViewModel categoryVM = new CategoryViewModel();
+                    categoryVM.Category = category;
+                    return View(categoryVM);
+                }
+            }
+            else
+            {
+                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
             }
         }
 
@@ -133,11 +162,18 @@ namespace Silerium.Controllers
         // GET: AdminController/Delete/5
         public IActionResult DeleteCategory(int id)
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
             {
-                ICategories categories = new CategoriesRepository(db);
-                Category category = categories.GetAllWithInclude(c => c.Subcategories).ElementAt(id-1);
-                return View(category);
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    ICategories categories = new CategoriesRepository(db);
+                    Category category = categories.GetAllWithInclude(c => c.Subcategories).ElementAt(id-1);
+                    return View(category);
+                }
+            }
+            else
+            {
+                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
             }
         }
 
@@ -165,21 +201,35 @@ namespace Silerium.Controllers
         }
         public IActionResult Subcategories()
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
             {
-                ISubcategories subcategories = new SubcategoriesRepository(db);
-                List<Subcategory> subcategoriesList = subcategories.GetAllWithInclude(c => c.Category).ToList();
-                return View(subcategoriesList);
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    ISubcategories subcategories = new SubcategoriesRepository(db);
+                    List<Subcategory> subcategoriesList = subcategories.GetAllWithInclude(c => c.Category).ToList();
+                    return View(subcategoriesList);
+                }
+            }
+            else
+            {
+                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
             }
         }
 
         // GET: AdminController/Create
         public IActionResult CreateSubcategory()
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
             {
-                ICategories categories = new CategoriesRepository(db);
-                return View(new SubcategoryViewModel { Subcategory = new Subcategory(), Categories = categories.GetAll().ToList()});
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    ICategories categories = new CategoriesRepository(db);
+                    return View(new SubcategoryViewModel { Subcategory = new Subcategory(), Categories = categories.GetAll().ToList()});
+                }
+            }
+            else
+            {
+                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
             }
         }
 
@@ -228,11 +278,18 @@ namespace Silerium.Controllers
         // GET: AdminController/Edit/5
         public IActionResult EditSubcategory(int id)
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
             {
-                ISubcategories subcategories = new SubcategoriesRepository(db);
-                SubcategoryViewModel subcategoryVM = new SubcategoryViewModel { Subcategory = subcategories.GetByID(id - 1) };
-                return View(subcategoryVM);
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    ISubcategories subcategories = new SubcategoriesRepository(db);
+                    SubcategoryViewModel subcategoryVM = new SubcategoryViewModel { Subcategory = subcategories.GetByID(id - 1) };
+                    return View(subcategoryVM);
+                }
+            }
+            else
+            {
+                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
             }
         }
 
@@ -277,12 +334,19 @@ namespace Silerium.Controllers
         // GET: AdminController/Delete/5
         public IActionResult DeleteSubcategory(int id)
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
             {
-                ISubcategories subcategories = new SubcategoriesRepository(db);
-                IEnumerable<Subcategory> _subcategories = subcategories.GetAllWithInclude(sc => sc.Category);
-                Subcategory subcategory = _subcategories.ElementAt(id - 1);
-                return View(subcategory);
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    ISubcategories subcategories = new SubcategoriesRepository(db);
+                    IEnumerable<Subcategory> _subcategories = subcategories.GetAllWithInclude(sc => sc.Category);
+                    Subcategory subcategory = _subcategories.ElementAt(id - 1);
+                    return View(subcategory);
+                }
+            }
+            else
+            {
+                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
             }
         }
 
@@ -309,23 +373,37 @@ namespace Silerium.Controllers
         }
         public IActionResult Products()
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
             {
-                IProducts products = new ProductsRepository(db);
-                List<Product> productsList = products.GetAllWithInclude(p => p.Subcategory).ToList();
-                return View(productsList);
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IProducts products = new ProductsRepository(db);
+                    List<Product> productsList = products.GetAllWithInclude(p => p.Subcategory).ToList();
+                    return View(productsList);
+                }
+            }
+            else
+            {
+                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
             }
         }
         // GET: AdminController/Create
         public IActionResult CreateProduct()
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
             {
-                ISubcategories subcategories = new SubcategoriesRepository(db);
-                ProductViewModel productViewModel = new ProductViewModel();
-                productViewModel.Product = new Product();
-                productViewModel.Subcategories = subcategories.GetAll().ToList();
-                return View(productViewModel);
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    ISubcategories subcategories = new SubcategoriesRepository(db);
+                    ProductViewModel productViewModel = new ProductViewModel();
+                    productViewModel.Product = new Product();
+                    productViewModel.Subcategories = subcategories.GetAll().ToList();
+                    return View(productViewModel);
+                }
+            }
+            else
+            {
+                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
             }
         }
 
