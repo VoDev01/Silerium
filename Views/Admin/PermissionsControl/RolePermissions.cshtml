@@ -1,0 +1,42 @@
+﻿@model Silerium.ViewModels.PermissionAuthorizationModels.PermissionViewModel
+@{
+    ViewData["Title"] = "Разрешения роли " + Model.RoleName;
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+    <h1>Разрешения для роли @Model.RoleName</h1>
+    <form asp-action="Permissions" asp-area="PermissionsControl" asp-controller="Admin">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <td>
+                        @Html.DisplayName("Тип")
+                    </td>
+                    <td>
+                        @Html.DisplayName("Разрешение")
+                    </td>
+                    <td>
+                        @Html.DisplayName("Статус")
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    @foreach (var permissionClaim in Model.RoleClaims)
+                    {
+                        <td>
+                            @permissionClaim.Type
+                        </td>
+                        <td>
+                            @permissionClaim.Value
+                        </td>
+                        <td>
+                            <input type="checkbox" asp-for="@permissionClaim.Selected" class="form-check">
+                        </td>
+                    }
+                </tr>
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-success">Сохранить</button>
+    </form>
+</div>

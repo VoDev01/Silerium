@@ -1,0 +1,47 @@
+﻿@model List<Silerium.Models.Role>
+@{
+    ViewData["Title"] = "Роли";
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <td>
+                    @Html.DisplayName("Роль")
+                </td>
+                <td>
+                    @Html.DisplayName("Статус")
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                @foreach(var role in Model)
+                {
+                    <td>
+                        @role.Name
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Действие
+                            </button>
+                            <div class="dropdown-menu shadow animated--grow-in">
+                                <a class="dropdown-item" asp-action="EditRole" asp-area="RolesControl" asp-controller="Admin">Редактировать</a>
+                                <a class="dropdown-item" asp-action="DeleteRole" asp-area="RolesControl" asp-controller="Admin">Удалить</a>
+                                @if (role.Name != "SuperAdmin")
+                                {
+                                    <a style='margin-right:16px' asp-controller="RolePermissions" asp-area="PermissionsControl" asp-action="Admin"
+                                    asp-route-roleId="@role.Id" class="dropdown-item">
+                                        Управление правами
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </td>
+                }
+            </tr>
+        </tbody>
+    </table>
+</div>

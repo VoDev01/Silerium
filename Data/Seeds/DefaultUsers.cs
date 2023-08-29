@@ -8,45 +8,28 @@ namespace Silerium.Data.Seeds
 {
     public static class DefaultUsers
     {
-        public static async Task<List<Claim>?> GenerateUserClaims(string userEmail, IUsers users, ILogger? logger)
+        public static async Task<List<Claim?>> GenerateClaims(string email, IUsers users, ILogger? logger)
         {
-            if (users.IfAny(u => u.Email == userEmail))
+            if (users.IfAny(u => u.Email == email))
             {
-                List<Claim> userClaims = new List<Claim>
+                User user = users.GetAllWithInclude(u => u.Roles).Where(u => u.Email == email).FirstOrDefault();
+                List<Claim> claims = new List<Claim>
                 {
-                    new Claim("Name", userEmail),
-                    new Claim("Role", Roles.User.ToString())
+                    new Claim("Name", email)
                 };
-                return userClaims;
-            }
-            else
-            {
-                logger?.LogError($"No user with {userEmail} email was found in database.");
-                return null;
-            }
-        }
-        public static async Task<List<Claim>?> GenerateSuperAdminClaims(string superAdminEmail, IUsers users, ILogger? logger)
-        {
-            if (users.IfAny(u => u.Email == superAdminEmail))
-            {
-                List<Claim> superAdminClaims = new List<Claim>
+                foreach(var role in user.Roles)
                 {
-                    new Claim("Name", superAdminEmail),
-                    new Claim("Role", Roles.SuperAdmin.ToString()),
-                    new Claim("Role", Roles.Admin.ToString()),
-                    new Claim("Role", Roles.Moderator.ToString()),
-                    new Claim("Role", Roles.Manager.ToString()),
-                    new Claim("Role", Roles.User.ToString())
-                };
+                    claims.Add(new Claim("Role", role.Name));
+                }
                 foreach (var permission in SeedPermissions())
                 {
-                    superAdminClaims.Add(new Claim("Permission", permission));
+                    claims.Add(new Claim("Permission", permission));
                 }
-                return superAdminClaims;
+                return claims;
             }
             else
             {
-                logger?.LogError($"No SuperAdmin with {superAdminEmail} email was found in database.");
+                logger?.LogWarning($"No user with {email} email was found in database.");
                 return null;
             }
         }
@@ -61,7 +44,7 @@ namespace Silerium.Data.Seeds
             Role role = new Role
             {
                 Id = 1,
-                Name = Roles.SuperAdmin,
+                Name = Roles.SuperAdmin.ToString(),
                 Permissions = permissions
             };
             return role;
@@ -72,7 +55,7 @@ namespace Silerium.Data.Seeds
             Role role = new Role
             {
                 Id = 2,
-                Name = Roles.Admin,
+                Name = Roles.Admin.ToString(),
             };
             return role;
         }
@@ -81,7 +64,7 @@ namespace Silerium.Data.Seeds
             Role role = new Role
             {
                 Id = 3,
-                Name = Roles.Moderator,
+                Name = Roles.Moderator.ToString(),
             };
             return role;
         }
@@ -90,7 +73,7 @@ namespace Silerium.Data.Seeds
             Role role = new Role
             {
                 Id = 4,
-                Name = Roles.Manager,
+                Name = Roles.Manager.ToString(),
             };
             return role;
         }
@@ -99,19 +82,19 @@ namespace Silerium.Data.Seeds
             Role role = new Role
             {
                 Id = 5,
-                Name = Roles.User,
+                Name = Roles.User.ToString(),
             };
             return role;
         }
         public static IEnumerable<string> SeedPermissions()
         {
-            var allModelsPermissions = RolesManagerService.GeneratePermissionsForModel("Product")
-                .Concat(RolesManagerService.GeneratePermissionsForModel("Category"))
-                .Concat(RolesManagerService.GeneratePermissionsForModel("Subcategory"))
-                .Concat(RolesManagerService.GeneratePermissionsForModel("User"))
-                .Concat(RolesManagerService.GeneratePermissionsForModel("Role"))
-                .Concat(RolesManagerService.GeneratePermissionsForModel("Permission"))
-                .Concat(RolesManagerService.GeneratePermissionsForModel("Order"));
+            var allModelsPermissions = RolesManagerService.GeneratePermissionsNamesForModel("Product")
+                .Concat(RolesManagerService.GeneratePermissionsNamesForModel("Category"))
+                .Concat(RolesManagerService.GeneratePermissionsNamesForModel("Subcategory"))
+                .Concat(RolesManagerService.GeneratePermissionsNamesForModel("User"))
+                .Concat(RolesManagerService.GeneratePermissionsNamesForModel("Role"))
+                .Concat(RolesManagerService.GeneratePermissionsNamesForModel("Permission"))
+                .Concat(RolesManagerService.GeneratePermissionsNamesForModel("Order"));
             return allModelsPermissions;
         }
     }

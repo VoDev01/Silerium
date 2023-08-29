@@ -2,11 +2,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
 using Silerium.Models.Repositories;
 using Silerium.Services;
+using Silerium.ViewModels.PermissionAuthorizationModels;
 using Silerium.ViewModels.ProductsModels;
 using System.Data;
 
@@ -33,13 +35,16 @@ namespace Silerium.Controllers
             return View(permission + ".");
         }
         // GET: AdminController
+        [Area("Home")]
         public IActionResult Index()
         {
             return View();
         }
+        [Area("CategoriesControl")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult Categories()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.View)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.View)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -50,20 +55,24 @@ namespace Silerium.Controllers
             }
             else
             {
-                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.View) });
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.View);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
-
         // GET: AdminController/Create
+        [Area("CategoriesControl")]
         public IActionResult CreateCategory()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Create)).Result.Succeeded)
             {
                 return View(new CategoryViewModel());
             }
             else
             {
-                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Create);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
 
@@ -102,11 +111,11 @@ namespace Silerium.Controllers
                 return View();
             }
         }
-
         // GET: AdminController/Edit/5
+        [Area("CategoriesControl")]
         public IActionResult EditCategory(int id)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Edit)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -119,7 +128,9 @@ namespace Silerium.Controllers
             }
             else
             {
-                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Edit);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
 
@@ -159,11 +170,11 @@ namespace Silerium.Controllers
                 return View();
             }
         }
-
         // GET: AdminController/Delete/5
+        [Area("CategoriesControl")]
         public IActionResult DeleteCategory(int id)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Delete)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -174,7 +185,9 @@ namespace Silerium.Controllers
             }
             else
             {
-                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Delete);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
 
@@ -200,9 +213,10 @@ namespace Silerium.Controllers
                 return View();
             }
         }
+        [Area("SubcategoriesControl")]
         public IActionResult Subcategories()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Create)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -213,14 +227,16 @@ namespace Silerium.Controllers
             }
             else
             {
-                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.View);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
-
+        [Area("SubcategoriesControl")]
         // GET: AdminController/Create
         public IActionResult CreateSubcategory()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Create)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -230,7 +246,9 @@ namespace Silerium.Controllers
             }
             else
             {
-                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Create);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
 
@@ -275,11 +293,11 @@ namespace Silerium.Controllers
                 return View();
             }
         }
-
         // GET: AdminController/Edit/5
+        [Area("SubcategoriesControl")]
         public IActionResult EditSubcategory(int id)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Edit)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -290,7 +308,9 @@ namespace Silerium.Controllers
             }
             else
             {
-                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Edit);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
 
@@ -331,11 +351,11 @@ namespace Silerium.Controllers
                 return View(); 
             }
         }
-
         // GET: AdminController/Delete/5
+        [Area("SubcategoriesControl")]
         public IActionResult DeleteSubcategory(int id)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Delete)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -347,7 +367,9 @@ namespace Silerium.Controllers
             }
             else
             {
-                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Delete);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
 
@@ -372,9 +394,10 @@ namespace Silerium.Controllers
                 return View();
             }
         }
+        [Area("ProductsControl")]
         public IActionResult Products()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.View)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -385,13 +408,16 @@ namespace Silerium.Controllers
             }
             else
             {
-                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.View);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
+        [Area("ProductsControl")]
         // GET: AdminController/Create
         public IActionResult CreateProduct()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Create)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -404,7 +430,9 @@ namespace Silerium.Controllers
             }
             else
             {
-                return RedirectToAction("NoPermissions", new { permission = RolesManagerService.GeneratePermissionForModel("Categories", PermissionType.Create) });
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Create);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
 
@@ -472,21 +500,31 @@ namespace Silerium.Controllers
                 return View();
             }
         }
+        [Area("ProductsControl")]
         public IActionResult EditProduct(int id)
         {
-            try
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Edit)).Result.Succeeded)
             {
-                using (var db = new ApplicationDbContext(connectionString))
+                try
                 {
-                    IProducts products = new ProductsRepository(db);
-                    Product product = products.GetByID(id - 1);
-                    return View(product);
+                    using (var db = new ApplicationDbContext(connectionString))
+                    {
+                        IProducts products = new ProductsRepository(db);
+                        Product product = products.GetByID(id - 1);
+                        return View(product);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e.Message);
+                    return View();
                 }
             }
-            catch (Exception e)
+            else
             {
-                logger.LogError(e.Message);
-                return View();
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Edit);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
         [HttpPost]
@@ -509,21 +547,31 @@ namespace Silerium.Controllers
                 return View();
             }
         }
+        [Area("ProductsControl")]
         public IActionResult DeleteProduct(int id)
         {
-            try
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Delete)).Result.Succeeded)
             {
-                using (var db = new ApplicationDbContext(connectionString))
+                try
                 {
-                    IProducts products = new ProductsRepository(db);
-                    Product product = products.GetByID(id - 1);
-                    return View(product);
+                    using (var db = new ApplicationDbContext(connectionString))
+                    {
+                        IProducts products = new ProductsRepository(db);
+                        Product product = products.GetByID(id - 1);
+                        return View(product);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e.Message);
+                    return View();
                 }
             }
-            catch (Exception e)
+            else
             {
-                logger.LogError(e.Message);
-                return View();
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Delete);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
         [HttpPost]
@@ -536,14 +584,14 @@ namespace Silerium.Controllers
                     IProducts products = new ProductsRepository(db);
                     IPages pages = new PagesRepository(db);
                     Product product = products.GetByID(id - 1);
-                    Page page = pages.FindSetByCondition(p => p.Products.Contains(product)).FirstOrDefault() 
-                        ?? pages.FindSetByCondition(p => p.Id == CatalogController.CurrentPageIndex).FirstOrDefault();
-                    products.Delete(product);
+                    Page page = pages.Find(p => p.Products.Contains(product)).FirstOrDefault() 
+                        ?? pages.Find(p => p.Id == CatalogController.CurrentPageIndex).FirstOrDefault();
+                    products.Remove(product);
                     products.Save();
                     page.Products.Remove(product);
                     if (page.Products.Count <= 0)
                     {
-                        pages.Delete(page);
+                        pages.Remove(page);
                         pages.Save();
                     }
                     return RedirectToAction("Products", "Admin");
@@ -555,33 +603,88 @@ namespace Silerium.Controllers
                 return View();
             }
         }
+        [Area("UsersControl")]
         public IActionResult Users()
         {
-            using(var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Users", PermissionType.View)).Result.Succeeded)
             {
-                IUsers users = new UsersRepository(db);
-                return View(users.GetAll().ToList());
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IUsers users = new UsersRepository(db);
+                    return View(users.GetAll().ToList());
+                }
+            }
+            else
+            {
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Users", PermissionType.View);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
         [HttpPost]
         public IActionResult UpdateUsers()
         {
-            return RedirectToAction("Users", "Admin");
+            return RedirectToRoute("/Admin/UsersControl/Users");
         }
+        [Area("OrdersControl")]
         public IActionResult Orders()
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.View)).Result.Succeeded)
             {
-                IOrders orders = new OrdersRepository(db);
-                IEnumerable<Order> orderModel = orders.GetAllWithInclude(o => o.User).Include(o => o.Product).ToList();
-                return View(orderModel);
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IOrders orders = new OrdersRepository(db);
+                    IEnumerable<Order> orderModel = orders.GetAllWithInclude(o => o.User).Include(o => o.Product).ToList();
+                    return View(orderModel);
+                }
+            }
+            else
+            {
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.View);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
             }
         }
         [HttpPost]
         public IActionResult UpdateOrders()
         {
-            return RedirectToAction("Orders", "Admin");
+            return RedirectToRoute("/Admin/OrdersControl/Orders");
         }
+        [Area("OrdersControl")]
+        public IActionResult RecallOrder()
+        {
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.Delete)).Result.Succeeded)
+            {
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IOrders orders = new OrdersRepository(db);
+                    Order orderModel = orders.GetAllWithInclude(o => o.User).Include(o => o.Product).FirstOrDefault();
+                    return View(orderModel);
+                }
+            }
+            else
+            {
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.Delete);
+                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                return RedirectToAction("NoPermissions", new { permission });
+            }
+        }
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> RecallOrder(string id, string reason)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IOrders orders = new OrdersRepository(db);
+                Order order = orders.GetAllWithInclude(o => o.User).Where(o => o.OrderId == new Guid(id)).FirstOrDefault();
+                order.OrderStatus = OrderStatus.CLOSED;
+                await orders.SaveAsync();
+                logger.LogInformation($"Заказ {order.OrderId} пользователя {order.User.Email} открытый в {order.OrderDate} " +
+                    $"был закрыт пользователем {User.Identity.Name}. \nПричина: {reason}");
+                return RedirectToRoute("/Admin/OrdersControl/RecallOrder");
+            }
+        }
+        [Area("OrdersControl")]
         public IActionResult OrderDetails(string orderid)
         {
             using (var db = new ApplicationDbContext(connectionString))
@@ -589,6 +692,165 @@ namespace Silerium.Controllers
                 IOrders orders = new OrdersRepository(db);
                 var guid = new Guid(orderid);
                 return View(orders.GetAllWithInclude(o => o.User).Include(o => o.Product).Where(u => u.OrderId == guid).ToList().FirstOrDefault());
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Area("RolesControl")]
+        public IActionResult UserRoles(int userId)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                IUsers users = new UsersRepository(db);
+                User user = users.GetByID(userId);
+                List<UserRolesViewModel> userRoles = new List<UserRolesViewModel>();
+                foreach(var role in roles.GetAll().ToList())
+                {
+                    bool isInRole = user.Roles.Any(u => u.Name == role.Name);
+                    userRoles.Add(new UserRolesViewModel { RoleName = role.Name, Selected = isInRole });
+                }
+                ManageUserRolesViewModel manageUserRolesViewModel = new ManageUserRolesViewModel { RolesVM = userRoles, UserName = user.Name };
+                return View(manageUserRolesViewModel);
+            }
+        }
+        [Area("RolesControl")]
+        [HttpPost]
+        public IActionResult UserRoles(ManageUserRolesViewModel manageUserRolesViewModel)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                IUsers users = new UsersRepository(db);
+                User user = users.Find(u => u.Name == manageUserRolesViewModel.UserName).FirstOrDefault();
+                user.Roles.Clear();
+
+                foreach (var role in manageUserRolesViewModel.RolesVM)
+                {
+                    if (role.Selected)
+                    {
+                        user.Roles.Add(new Role { Name = role.RoleName });
+                    }
+                }
+                return RedirectToAction("UserRoles", "Admin", new { userId = user.Id });
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Area("RolesControl")]
+        public IActionResult Roles()
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                return View(roles.GetAll().ToList());
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Area("RolesControl")]
+        public IActionResult CreateRole()
+        {
+            return View();
+        }
+        [Area("RolesControl")]
+        [HttpPost]
+        public IActionResult CreateRole(string roleName)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                Role role = new Role
+                {
+                    Name = roleName
+                };
+                roles.Add(role);
+                roles.Save();
+                return RedirectToAction("Roles", "Admin");
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Area("RolesControl")]
+        public IActionResult EditRole(int roleId)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                Role role = roles.GetByID(roleId);
+                return View(role);
+            }
+        }
+        [Area("RolesControl")]
+        [HttpPost]
+        public IActionResult EditRole(string roleName)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                Role role = roles.Find(r => r.Name == roleName).FirstOrDefault();
+                role.Name = roleName;
+                roles.Save();
+                return RedirectToAction("Roles", "Admin");
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Area("RolesControl")]
+        public IActionResult DeleteRole(int roleId)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                Role role = roles.GetByID(roleId);
+                return View(role.Name);
+            }
+        }
+        [Area("RolesControl")]
+        [HttpPost]
+        public IActionResult DeleteRole(string roleName)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IRoles roles = new RolesRepository(db);
+                Role role = roles.Find(r => r.Name == roleName).FirstOrDefault();
+                roles.Remove(role);
+                roles.Save();
+                return RedirectToAction("Roles", "Admin");
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Area("PermissionsControl")]
+        public IActionResult RolePermissions(int roleId)
+        {
+            using(var db = new ApplicationDbContext(connectionString))
+            {
+                IPermissions permissions = new PermissionsRepository(db);
+                IRoles roles = new RolesRepository(db);
+                Role role = roles.GetAllWithInclude(r => r.Permissions).Where(r => r.Id == roleId).FirstOrDefault();
+                PermissionViewModel permissionViewModel = new PermissionViewModel();
+                permissionViewModel.RoleName = role.Name;
+                foreach(var permission in permissions.GetAll().ToList())
+                {
+                    bool hasPermission = role.Permissions.Any(r => r.Id == permission.Id);
+                    permissionViewModel.RoleClaims.Add(new RoleClaimViewModel { Type = typeof(Permission).Name, Value = permission.PermissionName, Selected = hasPermission });
+                }
+                return View(permissionViewModel);
+            }
+        }
+        [Area("PermissionsControl")]
+        [HttpPost]
+        public IActionResult RolePermissions(PermissionViewModel permissionViewModel)
+        {
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IPermissions permissions = new PermissionsRepository(db);
+                IRoles roles = new RolesRepository(db);
+                Role role = roles.GetAllWithInclude(r => r.Permissions).Where(r => r.Name == permissionViewModel.RoleName).FirstOrDefault();
+                role.Permissions.Clear();
+                foreach (var permission in permissionViewModel.RoleClaims)
+                {
+                    if (permission.Selected)
+                    {
+                        role.Permissions.Add(permissions.Find(p => p.PermissionName == permission.Value).FirstOrDefault());
+                    }
+                }
+                return RedirectToAction("RolePermissions", "Admin", new { roleId = role.Id });
             }
         }
     }

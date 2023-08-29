@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Silerium</title>
+    <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SileriumDirectory.styles.css" asp-append-version="true" />
@@ -25,22 +25,25 @@
                             <h2 class="text-center">Админ панель</h2>
                         </li>
                         <li class="nav-item mb-1">
-                            <a class="nav-link d-block" asp-action="Categories" asp-controller="Admin">Категории</a>
+                            <a class="nav-link d-block" asp-action="Categories" asp-area="CategoriesControl" asp-controller="Admin">Категории</a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a class="nav-link d-block" asp-action="Subcategories" asp-controller="Admin">Подкатегории</a>
+                            <a class="nav-link d-block" asp-action="Subcategories" asp-area="SubcategoriesControl" asp-controller="Admin">Подкатегории</a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a class="nav-link d-block" asp-action="Products" asp-controller="Admin">Товары</a>
+                            <a class="nav-link d-block" asp-action="Products" asp-area="ProductsControl" asp-controller="Admin">Товары</a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a class="nav-link d-block" asp-action="Users" asp-controller="Admin">Пользователи</a>
+                            <a class="nav-link d-block" asp-action="Users" asp-area="UsersControl" asp-controller="Admin">Пользователи</a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a class="nav-link d-block" asp-action="Media" asp-controller="Admin">Медиа</a>
+                            <a class="nav-link d-block" asp-action="Roles" asp-area="RolesControl" asp-controller="Admin">Роли</a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a class="nav-link d-block" asp-action="Orders" asp-controller="Admin">Заказы</a>
+                            <a class="nav-link d-block" asp-action="Media" asp-area="MediaControl" asp-controller="Admin">Медиа</a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link d-block" asp-action="Orders" asp-area="OrdersControl" asp-controller="Admin">Заказы</a>
                         </li>
                         <li class ="nav-item mb-1">
                             <a class="nav-link text-black text-decoration-none" asp-controller="User" asp-action="Profile">

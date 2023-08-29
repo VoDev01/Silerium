@@ -41,7 +41,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             Name = "UserAuthCookie"
         };
-        options.ExpireTimeSpan = TimeSpan.FromHours(6);
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
     });
 
 builder.Services.AddLogging(logger => logger.AddConsole());
@@ -76,6 +76,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
+app.MapControllerRoute(
+    name: "area",
+    pattern: "{controller}/{area:exists}/{action}");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

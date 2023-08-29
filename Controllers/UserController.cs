@@ -209,10 +209,11 @@ namespace Silerium.Controllers
                     if (user != null)
                     {
                         SecurityToken jwt;
-                        List<Claim> claims = await DefaultUsers.GenerateSuperAdminClaims(user.Email, users, logger);
+                        List<Claim> claims = await DefaultUsers.GenerateClaims(user.Email, users, logger);
                         if(claims == null)
                         {
-                            claims = await DefaultUsers.GenerateUserClaims(user.Email, users, logger);
+                            logger.LogWarning("Failed assigning claims to user");
+                            return RedirectToAction("Login", "User");
                         }
                         ClaimsIdentity claimsIdentity;
                         ClaimsPrincipal claimsPrincipal;
@@ -333,8 +334,8 @@ namespace Silerium.Controllers
                         Country = userRegisterVM.Country,
                         Phone = userRegisterVM.Phone,
                         HomeAdress = userRegisterVM.HomeAdress,
-                        City = apiResult.location?.value
-                        //Role = "Client"
+                        City = apiResult.location?.value,
+                        Roles = new List<Role> { DefaultUsers.SeedUserRole() }
                     };
 
                     byte[] imageData;

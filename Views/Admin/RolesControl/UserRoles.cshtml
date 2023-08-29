@@ -1,0 +1,36 @@
+﻿@model Silerium.ViewModels.PermissionAuthorizationModels.ManageUserRolesViewModel
+@{
+    ViewData["Title"] = "Роли пользователя";
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+    <h1>Изменение ролей пользователя @Model.UserName</h1>
+    <form asp-action="UserRoles" asp-area="RolesControl" asp-controller="Admin">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <td>
+                        @Html.DisplayName("Роль")
+                    </td>
+                    <td>
+                        @Html.DisplayName("Статус")
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    @foreach (var role in Model.RolesVM)
+                    {
+                        <td>
+                            @role.RoleName
+                        </td>
+                        <td>
+                            <input type="checkbox" asp-for="@role.Selected" class="form-check">
+                        </td>
+                    }
+                </tr>
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-success">Сохранить</button>
+    </form>
+</div>

@@ -12,8 +12,7 @@ namespace Silerium.PermissionAuth
             }
             var permissions = context.User.Claims.Where(
                 u => u.Type == "Permission" &&
-                u.Value == requirement.Permission &&
-                u.Issuer == "VODev");
+                u.Value == requirement.Permission);
             if (permissions.Any())
             {
                 context.Succeed(requirement);

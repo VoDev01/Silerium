@@ -1,0 +1,13 @@
+﻿@model string
+@{
+    ViewData["Title"] = "Удаление роли";
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+    <p>Удалить роль @Model?</p>
+    <form asp-action="DeleteRole" asp-area="RolesControl" asp-controller="Admin">
+        <input hidden name="roleName" value="@Model" />
+        <button type="submit" class="btn btn-danger">Да</button>
+    </form>
+    <a class="btn btn-success">Нет</a>
+</div>

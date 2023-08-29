@@ -1,0 +1,12 @@
+﻿@model Silerium.Models.Role
+@{
+    ViewData["Title"] = "Редактирование роли";
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+    <form asp-action="CreateRole" asp-area="RoleControl" asp-controller="Admin">
+        <label class="form-label" asp-for="Name">Название роли</label>
+        <input type="text" class="form-control" asp-for="Name" />
+        <button type="submit" class="btn btn-success">Редактировать</button>
+    </form>
+</div>
