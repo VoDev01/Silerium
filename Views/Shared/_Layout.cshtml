@@ -23,7 +23,7 @@
                     <div class="navbar-nav">
                         @if (this.User.Identity.IsAuthenticated || this.Context.Request.Cookies["UserAuthCookie"] != null)
                         {
-                            <a class="nav-item nav-link text-success text-decoration-none" asp-controller="User" asp-action="ShopCart">
+                            <a class="nav-item nav-link text-black text-decoration-none" asp-controller="User" asp-action="ShopCart">
                                 Корзина
                                 <i class="bi bi-cart"></i>
                             </a>

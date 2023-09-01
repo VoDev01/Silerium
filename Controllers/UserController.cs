@@ -99,7 +99,7 @@ namespace Silerium.Controllers
                             logger.LogError($"User with access token {HttpContext.Session.GetString("access_token")} was not authorized");
                             return Unauthorized();
                         }
-                        logger.LogInformation($"User {user.Email} with role  authorized.");
+                        logger.LogInformation($"User {user.Email} with role {HttpContext.User.FindFirst("Role").Value} authorized.");
                         return View(userVM);
                     }
                     catch (Exception e)

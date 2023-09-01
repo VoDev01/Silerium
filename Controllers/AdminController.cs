@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
@@ -29,18 +30,17 @@ namespace Silerium.Controllers
             this.logger = logger;
             this.authorizationService = authorizationService;
         }
-
-        public IActionResult NoPermissions(string permission)
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
+        public IActionResult NoPermissions(string p)
         {
-            return View(permission + ".");
+            return View("NoPermissions", (object)p);
         }
         // GET: AdminController
-        [Area("Home")]
         public IActionResult Index()
         {
             return View();
         }
-        [Area("CategoriesControl")]
+        [Route("Admin/CategoriesControl/Categories")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult Categories()
         {
@@ -56,12 +56,13 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.View);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User {User.Identity.Name} doesn't have permission {permission} to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
         // GET: AdminController/Create
-        [Area("CategoriesControl")]
+        [Route("Admin/CategoriesControl/CreateCategory")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult CreateCategory()
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Create)).Result.Succeeded)
@@ -71,14 +72,15 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Create);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User {User.Identity.Name} doesn't have permission {permission} to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
 
         // POST: AdminController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Route("Admin/CategoriesControl/CreateCategory")]
         public IActionResult CreateCategory(CategoryViewModel categoryVM)
         {
             try
@@ -102,7 +104,7 @@ namespace Silerium.Controllers
                     }
                     categories.Add(categoryVM.Category);
                     categories.Save();
-                    return RedirectToAction("Categories", "Admin");
+                    return RedirectToRoute("Admin/CategoriesControl/Categories");
                 }
             }
             catch (Exception e)
@@ -112,7 +114,8 @@ namespace Silerium.Controllers
             }
         }
         // GET: AdminController/Edit/5
-        [Area("CategoriesControl")]
+        [Route("Admin/CategoriesControl/EditCategory")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult EditCategory(int id)
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Edit)).Result.Succeeded)
@@ -129,14 +132,15 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Edit);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User {User.Identity.Name} doesn't have permission  {permission}  to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
 
         // POST: AdminController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Route("Admin/CategoriesControl/EditCategory")]
         public IActionResult EditCategory(CategoryViewModel categoryVM)
         {
             try
@@ -161,7 +165,7 @@ namespace Silerium.Controllers
                     }
                     category = categoryVM.Category;
                     categories.Save();
-                    return RedirectToAction("Categories", "Admin");
+                    return RedirectToRoute("Admin/CategoriesControl/Categories");
                 }
             }
             catch (Exception e)
@@ -171,7 +175,8 @@ namespace Silerium.Controllers
             }
         }
         // GET: AdminController/Delete/5
-        [Area("CategoriesControl")]
+        [Route("Admin/CategoriesControl/DeleteCategory")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult DeleteCategory(int id)
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Delete)).Result.Succeeded)
@@ -186,14 +191,15 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Delete);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User {User.Identity.Name} doesn't have permission  {permission}  to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
 
         // POST: AdminController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Route("Admin/CategoriesControl/DeleteCategory")]
         public IActionResult DeleteCategory(Category category)
         {
             try
@@ -204,7 +210,7 @@ namespace Silerium.Controllers
                     ISubcategories subcategories = new SubcategoriesRepository(db);
                     categories.Remove(category);
                     categories.Save();
-                    return RedirectToAction("Categories", "Admin");
+                    return RedirectToRoute("Admin/CategoriesControl/Categories");
                 }
             }
             catch (Exception e)
@@ -213,10 +219,11 @@ namespace Silerium.Controllers
                 return View();
             }
         }
-        [Area("SubcategoriesControl")]
+        [Route("Admin/SubcategoriesControl/Subcategories")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult Subcategories()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.View)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -228,11 +235,12 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.View);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User {User.Identity.Name} doesn't have permission {permission} to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
-        [Area("SubcategoriesControl")]
+        [Route("Admin/SubcategoriesControl/CreateSubcategory")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         // GET: AdminController/Create
         public IActionResult CreateSubcategory()
         {
@@ -248,13 +256,14 @@ namespace Silerium.Controllers
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Create);
                 logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
 
         // POST: AdminController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Route("Admin/SubcategoriesControl/CreateSubcategory")]
         public IActionResult CreateSubcategory(SubcategoryViewModel subcategoryVM, int categoryid)
         {
             try
@@ -284,7 +293,7 @@ namespace Silerium.Controllers
 
                     subcategories.Add(subcategoryVM.Subcategory);
                     subcategories.Save();
-                    return RedirectToAction("Subcategories", "Admin");
+                    return RedirectToRoute("Admin/SubcategoriesControl/Subcategories");
                 }
             }
             catch (Exception e)
@@ -294,7 +303,8 @@ namespace Silerium.Controllers
             }
         }
         // GET: AdminController/Edit/5
-        [Area("SubcategoriesControl")]
+        [Route("Admin/SubcategoriesControl/EditSubcategory")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult EditSubcategory(int id)
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Edit)).Result.Succeeded)
@@ -309,14 +319,15 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Edit);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
 
         // POST: AdminController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Route("Admin/SubcategoriesControl/EditSubcategory")]
         public IActionResult EditSubcategory(SubcategoryViewModel subcategoryVM)
         {
             try
@@ -342,7 +353,7 @@ namespace Silerium.Controllers
                     }
                     subcategory = subcategoryVM.Subcategory;
                     subcategories.Save();
-                    return RedirectToAction("Subcategories", "Admin");
+                    return RedirectToRoute("Admin/SubcategoriesControl/Subcategories");
                 }
             }
             catch(Exception e) 
@@ -352,7 +363,8 @@ namespace Silerium.Controllers
             }
         }
         // GET: AdminController/Delete/5
-        [Area("SubcategoriesControl")]
+        [Route("Admin/SubcategoriesControl/DeleteSubcategory")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult DeleteSubcategory(int id)
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Delete)).Result.Succeeded)
@@ -368,14 +380,15 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Delete);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
 
         // POST: AdminController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Route("Admin/SubcategoriesControl/DeleteSubcategory")]
         public IActionResult DeleteSubcategory(Subcategory subcategory)
         {
             try
@@ -385,7 +398,7 @@ namespace Silerium.Controllers
                     ISubcategories subcategories = new SubcategoriesRepository(db);
                     subcategories.Remove(subcategory);
                     subcategories.Save();
-                    return RedirectToAction("Subcategories", "Admin");
+                    return RedirectToRoute("Admin/SubcategoriesControl/Subcategories");
                 }
             }
             catch(Exception e)
@@ -394,7 +407,8 @@ namespace Silerium.Controllers
                 return View();
             }
         }
-        [Area("ProductsControl")]
+        [Route("Admin/ProductsControl/Products")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult Products()
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.View)).Result.Succeeded)
@@ -409,11 +423,11 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.View);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
-        [Area("ProductsControl")]
+        [Route("Admin/ProductsControl/CreateProduct")]
         // GET: AdminController/Create
         public IActionResult CreateProduct()
         {
@@ -431,14 +445,16 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Create);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
 
         // POST: AdminController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Route("Admin/ProductsControl/CreateProduct")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult CreateProduct(ProductViewModel productVM, int product_subcategory)
         {
             try
@@ -491,7 +507,7 @@ namespace Silerium.Controllers
                     productVM.Product.Subcategory = subcategories.GetByID(product_subcategory - 1);
                     products.Add(productVM.Product);
                     products.Save();
-                    return RedirectToAction("Products", "Admin");
+                    return RedirectToRoute("Admin/ProductsControl/Products");
                 }
             }
             catch (Exception e)
@@ -500,7 +516,8 @@ namespace Silerium.Controllers
                 return View();
             }
         }
-        [Area("ProductsControl")]
+        [Route("Admin/ProductsControl/EditProduct")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult EditProduct(int id)
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Edit)).Result.Succeeded)
@@ -523,11 +540,12 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Edit);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
         [HttpPost]
+        [Route("Admin/ProductsControl/EditProduct")]
         public IActionResult EditProduct(Product product)
         {
             try
@@ -538,7 +556,7 @@ namespace Silerium.Controllers
                     Product productDB = products.GetByID(product.Id - 1);
                     productDB = product;
                     products.Save();
-                    return View(product);
+                    return RedirectToRoute("Admin/ProductsControl/Products");
                 }
             }
             catch (Exception e)
@@ -547,7 +565,8 @@ namespace Silerium.Controllers
                 return View();
             }
         }
-        [Area("ProductsControl")]
+        [Route("Admin/ProductsControl/DeleteProduct")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult DeleteProduct(int id)
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Delete)).Result.Succeeded)
@@ -570,11 +589,12 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Delete);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
         [HttpPost]
+        [Route("Admin/ProductsControl/DeletProductPost")]
         public IActionResult DeletProductPost(int id)
         {
             try
@@ -594,7 +614,7 @@ namespace Silerium.Controllers
                         pages.Remove(page);
                         pages.Save();
                     }
-                    return RedirectToAction("Products", "Admin");
+                    return RedirectToRoute("Admin/ProductsControl/Products");
                 }
             }
             catch (Exception e)
@@ -603,7 +623,8 @@ namespace Silerium.Controllers
                 return View();
             }
         }
-        [Area("UsersControl")]
+        [Route("Admin/UsersControl/Users")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult Users()
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Users", PermissionType.View)).Result.Succeeded)
@@ -617,16 +638,18 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Users", PermissionType.View);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
         [HttpPost]
+        [Route("Admin/UsersControl/UpdateUsers")]
         public IActionResult UpdateUsers()
         {
             return RedirectToRoute("/Admin/UsersControl/Users");
         }
-        [Area("OrdersControl")]
+        [Route("Admin/OrdersControl/Orders")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult Orders()
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.View)).Result.Succeeded)
@@ -641,16 +664,18 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.View);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
         [HttpPost]
+        [Route("Admin/OrdersControl/UpdateOrders")]
         public IActionResult UpdateOrders()
         {
             return RedirectToRoute("/Admin/OrdersControl/Orders");
         }
-        [Area("OrdersControl")]
+        [Route("Admin/OrdersControl/RecallOrder")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult RecallOrder()
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.Delete)).Result.Succeeded)
@@ -665,12 +690,13 @@ namespace Silerium.Controllers
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.Delete);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
-                return RedirectToAction("NoPermissions", new { permission });
+                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
         [HttpPost]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
+        [Route("Admin/OrdersControl/RecallOrder")]
         public async Task<IActionResult> RecallOrder(string id, string reason)
         {
             using (var db = new ApplicationDbContext(connectionString))
@@ -679,12 +705,12 @@ namespace Silerium.Controllers
                 Order order = orders.GetAllWithInclude(o => o.User).Where(o => o.OrderId == new Guid(id)).FirstOrDefault();
                 order.OrderStatus = OrderStatus.CLOSED;
                 await orders.SaveAsync();
-                logger.LogInformation($"Заказ {order.OrderId} пользователя {order.User.Email} открытый в {order.OrderDate} " +
-                    $"был закрыт пользователем {User.Identity.Name}. \nПричина: {reason}");
+                logger.LogInformation($"Order {order.OrderId} of the user {order.User.Email} made in {order.OrderDate} " +
+                    $"was closed by the user {User.Identity.Name}. \nReason: {reason}");
                 return RedirectToRoute("/Admin/OrdersControl/RecallOrder");
             }
         }
-        [Area("OrdersControl")]
+        [Route("Admin/OrdersControl/OrderDetails")]
         public IActionResult OrderDetails(string orderid)
         {
             using (var db = new ApplicationDbContext(connectionString))
@@ -695,7 +721,7 @@ namespace Silerium.Controllers
             }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
-        [Area("RolesControl")]
+        [Route("Admin/RolesControl/UserRoles")]
         public IActionResult UserRoles(int userId)
         {
             using (var db = new ApplicationDbContext(connectionString))
@@ -713,7 +739,7 @@ namespace Silerium.Controllers
                 return View(manageUserRolesViewModel);
             }
         }
-        [Area("RolesControl")]
+        [Route("Admin/RolesControl/UserRoles")]
         [HttpPost]
         public IActionResult UserRoles(ManageUserRolesViewModel manageUserRolesViewModel)
         {
@@ -735,7 +761,7 @@ namespace Silerium.Controllers
             }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
-        [Area("RolesControl")]
+        [Route("Admin/RolesControl/Roles")]
         public IActionResult Roles()
         {
             using (var db = new ApplicationDbContext(connectionString))
@@ -745,12 +771,12 @@ namespace Silerium.Controllers
             }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
-        [Area("RolesControl")]
+        [Route("Admin/RolesControl/CreateRole")]
         public IActionResult CreateRole()
         {
             return View();
         }
-        [Area("RolesControl")]
+        [Route("Admin/RolesControl/CreateRole")]
         [HttpPost]
         public IActionResult CreateRole(string roleName)
         {
@@ -763,11 +789,11 @@ namespace Silerium.Controllers
                 };
                 roles.Add(role);
                 roles.Save();
-                return RedirectToAction("Roles", "Admin");
+                return RedirectToRoute("Admin/RolesControl/Roles");
             }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
-        [Area("RolesControl")]
+        [Route("Admin/RolesControl/EditRole")]
         public IActionResult EditRole(int roleId)
         {
             using (var db = new ApplicationDbContext(connectionString))
@@ -777,7 +803,7 @@ namespace Silerium.Controllers
                 return View(role);
             }
         }
-        [Area("RolesControl")]
+        [Route("Admin/RolesControl/EditRole")]
         [HttpPost]
         public IActionResult EditRole(string roleName)
         {
@@ -787,11 +813,11 @@ namespace Silerium.Controllers
                 Role role = roles.Find(r => r.Name == roleName).FirstOrDefault();
                 role.Name = roleName;
                 roles.Save();
-                return RedirectToAction("Roles", "Admin");
+                return RedirectToRoute("Admin/RolesControl/Roles");
             }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
-        [Area("RolesControl")]
+        [Route("Admin/RolesControl/DeleteRole")]
         public IActionResult DeleteRole(int roleId)
         {
             using (var db = new ApplicationDbContext(connectionString))
@@ -801,7 +827,7 @@ namespace Silerium.Controllers
                 return View(role.Name);
             }
         }
-        [Area("RolesControl")]
+        [Route("Admin/RolesControl/DeleteRole")]
         [HttpPost]
         public IActionResult DeleteRole(string roleName)
         {
@@ -811,11 +837,11 @@ namespace Silerium.Controllers
                 Role role = roles.Find(r => r.Name == roleName).FirstOrDefault();
                 roles.Remove(role);
                 roles.Save();
-                return RedirectToAction("Roles", "Admin");
+                return RedirectToRoute("Admin/RolesControl/Roles");
             }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
-        [Area("PermissionsControl")]
+        [Route("Admin/PermissionsControl/RolePermissions")]
         public IActionResult RolePermissions(int roleId)
         {
             using(var db = new ApplicationDbContext(connectionString))
@@ -833,7 +859,7 @@ namespace Silerium.Controllers
                 return View(permissionViewModel);
             }
         }
-        [Area("PermissionsControl")]
+        [Route("Admin/PermissionsControl/RolePermissions")]
         [HttpPost]
         public IActionResult RolePermissions(PermissionViewModel permissionViewModel)
         {
@@ -850,7 +876,7 @@ namespace Silerium.Controllers
                         role.Permissions.Add(permissions.Find(p => p.PermissionName == permission.Value).FirstOrDefault());
                     }
                 }
-                return RedirectToAction("RolePermissions", "Admin", new { roleId = role.Id });
+                return RedirectToRoute("Admin/PermissionsControl/Roles?roleId=" + role.Id);
             }
         }
     }
