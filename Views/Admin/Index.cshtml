@@ -1,33 +1,5 @@
 ﻿@{
     ViewData["Title"] = "Админ панель";
+    Layout = "_AdminPanelLayout";
 }
-<div class="row panel">
-    <div class="toolbar col col-md-3">
-        <h2 class="text-center">Админ панель</h2>
-        <ul class="nav flex-column">
-            <li class="nav-item mb-2">
-                <a class="nav-link d-block text-start" asp-action="Categories" asp-controller="Admin">Категории</a>
-            </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link d-block text-start" asp-action="Subcategories" asp-controller="Admin">Подкатегории</a>
-            </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link d-block text-start" asp-action="Products" asp-controller="Admin">Товары</a>
-            </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link d-block text-start" asp-action="LoggedInUsers" asp-controller="Admin">Зарегистрированные пользователи</a>
-            </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link d-block text-start" asp-action="GuestUsers" asp-controller="Admin">Незарегистрированные пользователи</a>
-            </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link d-block text-start" asp-action="DataTables" asp-controller="Admin">Таблицы данных</a>
-            </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link d-block text-start" asp-action="Logout" asp-controller="Admin">Выйти</a>
-            </li>
-        </ul>
-    </div>
-    <div class="col-md-9">
-    </div>
-</div>
+<h1>Админка сайта Silerium</h1>

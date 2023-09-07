@@ -3,6 +3,14 @@
 @{
     ViewData["title"] = "Профиль";
 }
+<style>
+    #logout{
+        color: #6c757d;
+    }
+    #logout:hover{
+        color: black;
+    }
+</style>
 <div class="container">
     <div class="row mb-3">
         <div class="col-2">
@@ -31,18 +39,9 @@
             }
         </div>
     </div>
-    <style>
-        #logout 
-        {
-            color: #dc3545;
-        }
-        #logout:hover
-        {
-            color: white;
-        }
-    </style>
     <form class="form-inline" asp-action="Logout" asp-controller="User">
         <a class="btn btn-outline-secondary text-decoration-none" asp-action="EditProfile" asp-controller="User">Редактировать профиль</a>
-        <button type="submit" class="btn btn-link btn-outline-danger text-decoration-none" id="logout">Выйти из профиля</button>
+        <input hidden name="id" value="@Model.User.Id" />
+        <button type="submit" class="btn btn-outline-danger text-decoration-none" id="logout">Выйти из профиля</button>
     </form>
 </div>

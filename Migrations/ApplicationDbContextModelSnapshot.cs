@@ -22,6 +22,21 @@ namespace Silerium.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("RoleUser", b =>
+                {
+                    b.Property<int>("RolesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RolesId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("RoleUser");
+                });
+
             modelBuilder.Entity("Silerium.Models.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -98,6 +113,200 @@ namespace Silerium.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Pages");
+                });
+
+            modelBuilder.Entity("Silerium.Models.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("PermissionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permissions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            PermissionName = "Permission.Product.View"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            PermissionName = "Permission.Product.Create"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            PermissionName = "Permission.Product.Edit"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            PermissionName = "Permission.Product.Delete"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            PermissionName = "Permission.Product.DownloadData"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            PermissionName = "Permission.Category.View"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            PermissionName = "Permission.Category.Create"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            PermissionName = "Permission.Category.Edit"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            PermissionName = "Permission.Category.Delete"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            PermissionName = "Permission.Category.DownloadData"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            PermissionName = "Permission.Subcategory.View"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            PermissionName = "Permission.Subcategory.Create"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            PermissionName = "Permission.Subcategory.Edit"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            PermissionName = "Permission.Subcategory.Delete"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            PermissionName = "Permission.Subcategory.DownloadData"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            PermissionName = "Permission.User.View"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            PermissionName = "Permission.User.Create"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            PermissionName = "Permission.User.Edit"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            PermissionName = "Permission.User.Delete"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            PermissionName = "Permission.User.DownloadData"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            PermissionName = "Permission.Role.View"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            PermissionName = "Permission.Role.Create"
+                        },
+                        new
+                        {
+                            Id = 23,
+                            PermissionName = "Permission.Role.Edit"
+                        },
+                        new
+                        {
+                            Id = 24,
+                            PermissionName = "Permission.Role.Delete"
+                        },
+                        new
+                        {
+                            Id = 25,
+                            PermissionName = "Permission.Role.DownloadData"
+                        },
+                        new
+                        {
+                            Id = 26,
+                            PermissionName = "Permission.Permission.View"
+                        },
+                        new
+                        {
+                            Id = 27,
+                            PermissionName = "Permission.Permission.Create"
+                        },
+                        new
+                        {
+                            Id = 28,
+                            PermissionName = "Permission.Permission.Edit"
+                        },
+                        new
+                        {
+                            Id = 29,
+                            PermissionName = "Permission.Permission.Delete"
+                        },
+                        new
+                        {
+                            Id = 30,
+                            PermissionName = "Permission.Permission.DownloadData"
+                        },
+                        new
+                        {
+                            Id = 31,
+                            PermissionName = "Permission.Order.View"
+                        },
+                        new
+                        {
+                            Id = 32,
+                            PermissionName = "Permission.Order.Create"
+                        },
+                        new
+                        {
+                            Id = 33,
+                            PermissionName = "Permission.Order.Edit"
+                        },
+                        new
+                        {
+                            Id = 34,
+                            PermissionName = "Permission.Order.Delete"
+                        },
+                        new
+                        {
+                            Id = 35,
+                            PermissionName = "Permission.Order.DownloadData"
+                        });
                 });
 
             modelBuilder.Entity("Silerium.Models.Product", b =>
@@ -191,6 +400,319 @@ namespace Silerium.Migrations
                     b.ToTable("ProductSpecification");
                 });
 
+            modelBuilder.Entity("Silerium.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "SuperAdmin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Moderator"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Manager"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "User"
+                        });
+                });
+
+            modelBuilder.Entity("Silerium.Models.RolePermissions", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Granted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("GrantedByUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 1,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 2,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 3,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 4,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 5,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 6,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 7,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 8,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 9,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 10,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 11,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 12,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 13,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 14,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 15,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 16,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 17,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 18,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 19,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 20,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 21,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 22,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 23,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 24,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 25,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 26,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 27,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 28,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 29,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 30,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 31,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 32,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 33,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 34,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 35,
+                            Granted = true,
+                            GrantedByUser = "Dev"
+                        });
+                });
+
             modelBuilder.Entity("Silerium.Models.Subcategory", b =>
                 {
                     b.Property<int>("Id")
@@ -246,6 +768,9 @@ namespace Silerium.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<bool>("IsOnline")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -264,11 +789,6 @@ namespace Silerium.Migrations
                         .IsRequired()
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
                     b.Property<string>("Surname")
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
@@ -276,6 +796,21 @@ namespace Silerium.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("RoleUser", b =>
+                {
+                    b.HasOne("Silerium.Models.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RolesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Silerium.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Silerium.Models.Order", b =>
@@ -338,6 +873,25 @@ namespace Silerium.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Silerium.Models.RolePermissions", b =>
+                {
+                    b.HasOne("Silerium.Models.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Silerium.Models.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("Silerium.Models.Subcategory", b =>
                 {
                     b.HasOne("Silerium.Models.Category", "Category")
@@ -359,6 +913,11 @@ namespace Silerium.Migrations
                     b.Navigation("Products");
                 });
 
+            modelBuilder.Entity("Silerium.Models.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
             modelBuilder.Entity("Silerium.Models.Product", b =>
                 {
                     b.Navigation("Images");
@@ -366,6 +925,11 @@ namespace Silerium.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("Specifications");
+                });
+
+            modelBuilder.Entity("Silerium.Models.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
                 });
 
             modelBuilder.Entity("Silerium.Models.Subcategory", b =>

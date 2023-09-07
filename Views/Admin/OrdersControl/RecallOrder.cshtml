@@ -1,0 +1,124 @@
+﻿@model Silerium.Models.Order
+@{
+    ViewData["Title"] = "Отзыв заказа";
+}
+<div class="mx-3">
+    <h1>Вы уверены что хотите отозвать заказ?</h1>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayName("Id")
+                </th>
+                <th>
+                    @Html.DisplayName("Id товара")
+                </th>
+                <th>
+                    @Html.DisplayName("Название товара")
+                </th>
+                <th>
+                    @Html.DisplayName("Имя")
+                </th>
+                <th>
+                    @Html.DisplayName("Фамилия")
+                </th>
+                <th>
+                    @Html.DisplayName("Телефон")
+                </th>
+                <th>
+                    @Html.DisplayName("Email")
+                </th>
+                <th>
+                    @Html.DisplayName("Дата оформления")
+                </th>
+                <th>
+                    @Html.DisplayName("Кол-во")
+                </th>
+                <th>
+                    @Html.DisplayName("Адрес доставки")
+                </th>
+                <th>
+                    @Html.DisplayName("Цена за штуку")
+                </th>
+                <th>
+                    @Html.DisplayName("Цена итого")
+                </th>
+                <th>
+                    @Html.DisplayName("Статус")
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    @Model.OrderId
+                </td>
+                <td>
+                    @Model.ProductId
+                </td>
+                <td>
+                    @Model.Product.Name
+                </td>
+                <td>
+                    @Model.User.Name
+                </td>
+                <td>
+                    @Model.User.Surname
+                </td>
+                <td>
+                    @Model.User.Phone
+                </td>
+                <td>
+                    @Model.User.Email
+                </td>
+                <td>
+                    @Model.OrderDate
+                </td>
+                <td>
+                    @Model.OrderAmount
+                </td>
+                <td>
+                    @Model.OrderAddress
+                </td>
+                <td>
+                    @Model.Product.PriceRub
+                </td>
+                <td>
+                    @Model.TotalPrice
+                </td>
+                <td>
+                    @{
+                        string orderStatus = "";
+                        string orderColor = "";
+                    }
+                    @switch (Model.OrderStatus)
+                    {
+                        case Silerium.Models.OrderStatus.ISSUING:
+                            orderStatus = "Ожидает оформления";
+                            orderColor = "#7a7a7a";
+                            break;
+                        case Silerium.Models.OrderStatus.OPENED:
+                            orderStatus = "Открыт";
+                            orderColor = "#1aa922";
+                            break;
+                        case Silerium.Models.OrderStatus.PENDING:
+                            orderStatus = "Ожидается";
+                            orderColor = "#a0a147";
+                            break;
+                        case Silerium.Models.OrderStatus.DELIVERY:
+                            orderStatus = "Отправлен";
+                            orderColor = "#0b78a1";
+                            break;
+                    }
+                    <p style="color: @orderColor">@orderStatus</p>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <form action="/Admin/OrdersControl/DeleteOrder">
+        <label for="reason" class="form-label">Причина отзыва заказа</label>
+        <textarea id="reason" name="reason" required minlenght="20" maxlength="300" height="200" width="300" style="resize: none;"></textarea>
+        <button type="submit" class="btn btn-danger">Отозвать</button>
+    </form>
+    <a class="btn btn-primary" asp-action="Orders" asp-controller="Admin">К заказам</a>
+</div>

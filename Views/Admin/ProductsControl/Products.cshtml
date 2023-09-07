@@ -1,0 +1,85 @@
+﻿﻿@using System.Globalization
+@model Silerium.ViewModels.AdminModels.AdminProductsViewModel
+
+@{
+    ViewData["Title"] = "Товары";
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+
+    <form style="width: 200px; margin-bottom: 15px;" asp-action="SearchProducts" asp-controller="Admin">
+        <label class="form-label" for="searchProducts">Поиск</label>
+        <input type="search" class="form-control" name="searchProducts" id="searchProducts" />
+    </form>
+    <h1>Товары</h1>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayName("Название товара")
+                </th>
+                <th>
+                    @Html.DisplayName("Описание")
+                </th>
+                <th>
+                    @Html.DisplayName("Цена руб")
+                </th>
+                <th>
+                    @Html.DisplayName("Кол-во")
+                </th>
+                <th>
+                    @Html.DisplayName("Доступен для продажи")
+                </th>
+                <th>
+                    @Html.DisplayName("Подкатегория")
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Products)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Description)
+                    </td>
+                    <td>
+                        <span>@item.PriceRub.ToString("N1", CultureInfo.CreateSpecificCulture("ru-RU")) &#8381;</span>
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StockAmount)<span>шт.</span>
+                    </td>
+                    <td>
+                        @if (item.Available)
+                        {
+                            <p>Да</p>
+                        }
+                        else
+                        {
+                            <p>Нет</p>
+                        }
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Subcategory.Name)
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <button type="button" class="dropdown-toggle btn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Действие
+                            </button>
+                            <div class="dropdown-menu shadow">
+                                <a asp-action="CreateProduct" class="dropdown-item">Создать</a>
+                                <a asp-action="EditProduct" asp-route-id="@item.Id" class="dropdown-item">Редактировать</a>
+                                <a asp-action="DeleteProduct" asp-route-id="@item.Id" class="dropdown-item">Удалить</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/_PaginationPartial.cshtml", Model.PaginationModel)

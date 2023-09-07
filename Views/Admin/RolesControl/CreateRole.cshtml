@@ -1,0 +1,11 @@
+﻿@{
+    ViewData["Title"] = "Новая роль";
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+    <form asp-action="CreateRole" asp-area="RoleControl" asp-controller="Admin">
+        <label class="form-label" for="roleName">Название роли</label>
+        <input type="text" class="form-control" id="roleName" name="roleName" />
+        <button type="submit" class="btn btn-success">Создать</button>
+    </form>
+</div>

@@ -1,0 +1,106 @@
+﻿@model Silerium.ViewModels.AdminModels.AdminOrdersViewModel
+@{
+    ViewData["Title"] = "Заказы";
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+    <form style="width: 200px; margin-bottom: 15px;" asp-action="SearchOrders" asp-controller="Admin">
+        <label class="form-label" for="search_orders">Поиск</label>
+        <input type="search" class="form-control" name="search_orders" id="search_orders" />
+    </form>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayName("Id")
+                </th>
+                <th>
+                    @Html.DisplayName("Id товара")
+                </th>
+                <th>
+                    @Html.DisplayName("Email")
+                </th>
+                <th>
+                    @Html.DisplayName("Дата оформления")
+                </th>
+                <th>
+                    @Html.DisplayName("Кол-во")
+                </th>
+                <th>
+                    @Html.DisplayName("Цена итого")
+                </th>
+                <th>
+                    @Html.DisplayName("Статус")
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model.Orders)
+            {
+                <tr>
+                    <td>
+                        @order.OrderId
+                    </td>
+                    <td>
+                        @order.ProductId
+                    </td>
+                    <td>
+                        @order.User.Email
+                    </td>
+                    <td>
+                        @order.OrderDate
+                    </td>
+                    <td>
+                        @order.OrderAmount
+                    </td>
+                    <td>
+                        @order.TotalPrice
+                    </td>
+                    <td>
+                        @{
+                            string orderStatus = "";
+                            string orderColor = "";
+                        }
+                        @switch (order.OrderStatus)
+                        {
+                            case Silerium.Models.OrderStatus.ISSUING:
+                                orderStatus = "Ожидает оформления";
+                                orderColor = "#7a7a7a";
+                                break;
+                            case Silerium.Models.OrderStatus.OPENED:
+                                orderStatus = "Открыт";
+                                orderColor = "#1aa922";
+                                break;
+                            case Silerium.Models.OrderStatus.PENDING:
+                                orderStatus = "Ожидается";
+                                orderColor = "#a0a147";
+                                break;
+                            case Silerium.Models.OrderStatus.DELIVERY:
+                                orderStatus = "Отправлен";
+                                orderColor = "#0b78a1";
+                                break;
+                        }
+                        <p style="color: @orderColor">@orderStatus</p>
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <button type="button" class="btn" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
+                                Действие
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="btn btn-secondary" asp-action="OrderDetails" asp-controller="Admin" asp-route-orderid="@order.OrderId.ToString()">Подробно</a>
+                                <a asp-action="EditOrder" class="btn btn-warning">Редактировать</a>
+                                <a asp-action="EditOrder" class="btn btn-danger">Отозвать</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <form asp-action="UpdateOrders" asp-controller="Admin">
+        <button type="submit" class="btn btn-primary">Обновить</button>
+    </form>
+</div>
+@await Html.PartialAsync("~/Views/Shared/_PaginationPartial.cshtml", Model.PaginationModel)

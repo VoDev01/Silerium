@@ -1,0 +1,48 @@
+﻿@model Silerium.ViewModels.PermissionAuthorizationModels.PermissionViewModel
+@{
+    ViewData["Title"] = "Разрешения роли " + Model.RoleName;
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+    <h1>Разрешения для роли @Model.RoleName</h1>
+    <form asp-action="RolePermissions" asp-controller="Admin">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <td>
+                        @Html.DisplayName("Тип")
+                    </td>
+                    <td>
+                        @Html.DisplayName("Разрешение")
+                    </td>
+                    <td>
+                        @Html.DisplayName("Статус")
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.RoleClaims.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            @Model.RoleClaims[i].Type
+                        </td>
+                        <td>
+                            @Model.RoleClaims[i].Value
+                        </td>
+                        <td>
+                            <input hidden asp-for="@Model.RoleClaims[i].Type">
+                            <input hidden asp-for="@Model.RoleClaims[i].Value">
+                            <input type="checkbox" asp-for="@Model.RoleClaims[i].Selected" class="form-check">
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <input hidden asp-for="@Model.RoleName">
+        <button type="submit" class="btn btn-success">Сохранить</button>
+    </form>
+</div>
+@section Pagination{
+    @await Html.PartialAsync("~/Views/Shared/_PaginationPartial.cshtml", Model.PaginationModel)
+}

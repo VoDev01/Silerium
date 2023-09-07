@@ -15,6 +15,7 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using Dadata;
 using Dadata.Model;
+using Silerium.Data.Seeds;
 
 namespace Silerium.Controllers
 {
@@ -38,8 +39,8 @@ namespace Silerium.Controllers
             {
                 IUsers users = new UsersRepository(db);
                 UserViewModel userViewModel = new UserViewModel();
-                string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
-                userViewModel.User = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                string userEmail = HttpContext.User.FindFirstValue("Name");
+                userViewModel.User = users.Find(u => u.Email == userEmail).FirstOrDefault();
                 return View(userViewModel);
             }
         }
@@ -71,6 +72,7 @@ namespace Silerium.Controllers
                     return RedirectToAction("Profile", "User");
                 }
                 users.Save();
+                logger.LogInformation($"User {user.Email} edited profile.");
                 return RedirectToAction("Profile", "User");
             }
         }
@@ -88,8 +90,8 @@ namespace Silerium.Controllers
                         IUsers users = new UsersRepository(db);
                         UserViewModel userVM = new UserViewModel();
                         User? user = null;
-                        string userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Name);
-                        user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                        string userEmail = HttpContext.User.FindFirstValue("Name");
+                        user = users.Find(u => u.Email == userEmail).FirstOrDefault();
                         if (user != null)
                             userVM.User = user;
                         else
@@ -97,6 +99,7 @@ namespace Silerium.Controllers
                             logger.LogError($"User with access token {HttpContext.Session.GetString("access_token")} was not authorized");
                             return Unauthorized();
                         }
+                        logger.LogInformation($"User {user.Email} with role {HttpContext.User.FindFirst("Role").Value} authorized.");
                         return View(userVM);
                     }
                     catch (Exception e)
@@ -119,6 +122,7 @@ namespace Silerium.Controllers
                 IUsers users = new UsersRepository(db);
                 if (await users.IfAnyAsync(u => u.Email == Email))
                 {
+                    logger.LogInformation($"User with email {Email} already exists.");
                     return Json(false);
                 }
                 else
@@ -135,25 +139,28 @@ namespace Silerium.Controllers
                 var phoneResult = await api.Clean<Phone>(Phone);
                 if(phoneResult.qc_conflict == "2" || phoneResult.qc_conflict == "3")
                 {
-                    logger.LogWarning($"Город или регион адреса телефона {phoneResult.source} отличаются от указанных. " +
-                        $"Город: {phoneResult.city}, регион: {phoneResult.region}.");
+                    logger.LogWarning($"City or region of phone number {phoneResult.source} differ from what user typed in. " +
+                        $"City: {phoneResult.city}, region: {phoneResult.region}.");
                 }
                 if(phoneResult.qc == "0" || phoneResult.qc == "7")
                 {
+                    logger.LogInformation($"Phone number {Phone} exists and correct.");
                     return Json(true);
                 }
                 else if (phoneResult.qc == "2")
                 {
-                    logger.LogWarning($"Телефон {phoneResult.source} пустой или заведомо мусорный.");
+                    logger.LogWarning($"Phone number {phoneResult.source} is non-existent or fake.");
                     return Json($"Введите действующий номер телефона.");
                 }
                 else if (phoneResult.qc == "1")
                 {
+                    logger.LogInformation($"Phone number {Phone} can't be determined.");
                     return Json(false);
                 }
                 else if (phoneResult.qc == "3")
                 {
-                    logger.LogWarning($"Обнаружено несколько телефонов, распознан первый. Просьба проверить телефон {phoneResult.source} в ручную в случае несовпадений.");
+                    logger.LogInformation($"Located multiple phone numbers, first one selected. " +
+                        $"Check the number {phoneResult.source} manually in case of mismatches.");
                     return Json(true);
                 }
                 return Json(false);
@@ -163,7 +170,7 @@ namespace Silerium.Controllers
         public async Task<JsonResult> CheckPasswords(string Password, string ConfirmPassword)
         {
             if(Password == ConfirmPassword) 
-            { 
+            {
                 return Json(true); 
             }
             else
@@ -202,32 +209,26 @@ namespace Silerium.Controllers
                     if (user != null)
                     {
                         SecurityToken jwt;
-                        var claims = new List<Claim>
+                        List<Claim> claims = await DefaultUsers.GenerateClaims(user.Email, users, logger);
+                        if(claims == null)
                         {
-                            new Claim(ClaimTypes.Name, user.Email),
-                            new Claim(ClaimTypes.Role, user.Role)
-                        };
+                            logger.LogWarning("Failed assigning claims to user");
+                            return RedirectToAction("Login", "User");
+                        }
                         ClaimsIdentity claimsIdentity;
                         ClaimsPrincipal claimsPrincipal;
 
-                        if (userLoginVM.RememberMe) //Use cookies and jwt authentication
+                        if (userLoginVM.RememberMe) //Use cookies authentication
                         {
                             claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                             claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
                             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
-                            string? token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-                            if (token != null)
-                                jwt = new JwtSecurityTokenHandler().ReadToken(token);
-                            else
-                                jwt = new JwtSecurityToken(
-                                issuer: JWTAuthOptions.ISSUER,
-                                audience: JWTAuthOptions.AUDIENCE,
-                                claims: claims,
-                                expires: DateTime.UtcNow.AddMinutes(1),
-                                signingCredentials: new SigningCredentials(JWTAuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
-                                );
+
                             if (Url.IsLocalUrl(returnUrl))
                             {
+                                logger.LogInformation($"User {user.Email} logged in using cookies.");
+                                user.IsOnline = true;
                                 return Redirect(returnUrl ?? "/");
                             }
                             else
@@ -254,6 +255,8 @@ namespace Silerium.Controllers
                             if (Url.IsLocalUrl(returnUrl))
                             {
                                 HttpContext.Session.SetString("access_token", new JwtSecurityTokenHandler().WriteToken(jwt));
+                                user.IsOnline = true;
+                                logger.LogInformation($"User {user.Email} logged in using JWT.");
                                 return Redirect(returnUrl ?? "/");
                             }
                             else
@@ -265,19 +268,22 @@ namespace Silerium.Controllers
                     }
                     else
                     {
-                        if (users.FindSetByCondition(u => u.Password == userLoginVM.Password).Count() == 0)
+                        if (users.Find(u => u.Password == userLoginVM.Password).Count() == 0)
                         {
                             TempData["Wrong Password"] = "Неверный пароль.";
+                            logger.LogInformation($"User {userLoginVM.Email} typed in wrong password {userLoginVM.Password}.");
                             return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                         }
-                        else if (users.FindSetByCondition(u => u.Email == userLoginVM.Email).Count() == 0)
+                        else if (users.Find(u => u.Email == userLoginVM.Email).Count() == 0)
                         {
                             TempData["Wrong Email"] = "Неверный email.";
+                            logger.LogInformation($"User {userLoginVM.Email} typed in wrong or non-existent email.");
                             return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                         }
                         else
                         {
                             TempData["User not found"] = "Такого профиля не существует. Зарегистрируйтесь и создайте новый.";
+                            logger.LogInformation($"User {userLoginVM.Email} profile is not exists.");
                             return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                         }
                     }
@@ -329,7 +335,7 @@ namespace Silerium.Controllers
                         Phone = userRegisterVM.Phone,
                         HomeAdress = userRegisterVM.HomeAdress,
                         City = apiResult.location?.value,
-                        Role = "Client"
+                        Roles = new List<Role> { DefaultUsers.SeedUserRole() }
                     };
 
                     byte[] imageData;
@@ -347,9 +353,9 @@ namespace Silerium.Controllers
                     }
                     user.ProfilePicture = imageData;
 
-                    users.Create(user);
+                    users.Add(user);
                     users.Save();
-
+                    logger.LogInformation($"User {user.Email} registered.");
                     return RedirectToAction("Login", "User", new { returnUrl });
                 }
             }
@@ -363,12 +369,19 @@ namespace Silerium.Controllers
                 return RedirectToAction("Register", "User", new { error = "Заполненные данные не верны." });
             }
         }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            HttpContext.Session.Remove("access_token");
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Index", "Home");
+            //using (var db = new ApplicationDbContext(connectionString))
+            //{
+                //IUsers users = new UsersRepository(db);
+                HttpContext.Session.Remove("access_token");
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                logger.LogInformation($"User logged out");
+                //users.Find(u => u.Email == HttpContext.User.Identity.Name).FirstOrDefault().IsOnline = false;
+                return RedirectToAction("Index", "Home");
+            //}
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult ShopCart(string order_status = "ISSUING")
@@ -380,7 +393,7 @@ namespace Silerium.Controllers
                 string? userEmail = HttpContext.User.Identity.Name;
                 if (userEmail != null)
                 {
-                    User user = users.FindSetByCondition(u => u.Email == userEmail).FirstOrDefault();
+                    User user = users.Find(u => u.Email == userEmail).FirstOrDefault();
                     var orderStatusVal = Enum.Parse(typeof(OrderStatus), order_status);
                     UserViewModel userVM = new UserViewModel
                     {

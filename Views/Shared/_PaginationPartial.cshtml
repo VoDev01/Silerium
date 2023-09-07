@@ -1,0 +1,51 @@
+﻿@using Silerium.Models
+@model PaginationModel
+@if (Model.FirstPageIndex != Model.LastPageIndex)
+{
+    <nav aria-label="Search results pages.">
+        <ul class="pagination justify-content-center">
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @for (int i = Model.FirstPageIndex; i <= Model.LastPageIndex; i++)
+            {
+                if (i == Model.CurrentPage)
+                {
+                    
+                    <li class="page-item">
+                        <a class="page-link active" href="@(Url.ActionLink(Model.ActionName, Model.ControllerName, new {page = i}) 
+                            + Model.RouteParameters)">@i</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item">
+                        <a class="page-link active" href="@(Url.ActionLink(Model.ActionName, Model.ControllerName, new {page = i}) 
+                            + Model.RouteParameters)">@i</a>
+                    </li>
+                }
+            }
+            <li class="page-item">
+                <input aria-label="Jump to page" class="form-control shadow-none" name="page" type="number" placeholder="К странице ..."
+                   style="width: 125px; height: 38px;" />
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
