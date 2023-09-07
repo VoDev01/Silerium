@@ -7,7 +7,7 @@ namespace Silerium.Services
     public enum PermissionType { View, Edit, Create, Delete, DownloadData }
     public class RolesManagerService
     {
-        public static List<string> GeneratePermissionsForModel(string modelName)
+        public static List<string> GeneratePermissionsNamesForModel(string modelName)
         {
             return new List<string>
             {
@@ -18,7 +18,7 @@ namespace Silerium.Services
                 $"Permission.{modelName}.DownloadData"
             };
         }
-        public static string GeneratePermissionForModel(string modelName, PermissionType permissionType)
+        public static string GeneratePermissionNameForModel(string modelName, PermissionType permissionType)
         {
             return $"Permission.{modelName}.{permissionType}";
         }

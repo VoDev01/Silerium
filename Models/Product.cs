@@ -12,7 +12,7 @@ namespace Silerium.Models
         public string Name { get; set; }
         [MaxLength(1000)]
         public string? Description { get; set; }
-        public int PriceRub { get; set; }
+        public float PriceRub { get; set; }
         public int StockAmount { get; set; }
         public bool Available { get; set; }
         public Subcategory Subcategory { get; set; }

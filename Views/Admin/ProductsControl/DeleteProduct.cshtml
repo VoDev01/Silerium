@@ -1,0 +1,51 @@
+﻿@model Silerium.Models.Product
+
+@{
+    ViewData["Title"] = "Удаление товара";
+    Layout = "_AdminPanelLayout";
+}
+
+<h1>Удаление товара</h1>
+
+<h3>Вы уверены что хотите удалить товар?</h3>
+<div>
+    <h4>Product</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Description)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Description)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.StockAmount)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.StockAmount)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.PriceRub)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.PriceRub)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Available)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Available)
+        </dd>
+    </dl>
+    
+    <form asp-action="DeletProductPost">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Delete" class="btn btn-danger" />
+    </form>
+</div>

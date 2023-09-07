@@ -1,0 +1,97 @@
+﻿@model Silerium.ViewModels.ProductsModels.ProductViewModel
+
+@{
+    ViewData["Title"] = "Создание товара";
+    Layout = "_AdminPanelLayout";
+}
+
+<div class="mx-3">
+    <h1>Создание нового товара</h1>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="CreateProduct" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="Product.Name" class="control-label">Название товара</label>
+                    <input asp-for="Product.Name" class="form-control" />
+                    <span asp-validation-for="Product.Name" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Product.Description" class="control-label">Описание товара</label>
+                    <input asp-for="Product.Description" class="form-control" />
+                    <span asp-validation-for="Product.Description" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Product.PriceRub" class="control-label">Цена в рублях</label>
+                    <input asp-for="Product.PriceRub" class="form-control" />
+                    <span asp-validation-for="Product.PriceRub" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Product.StockAmount" class="control-label">Количество товара на складе</label>
+                    <input asp-for="Product.StockAmount" class="form-control" />
+                    <span asp-validation-for="Product.StockAmount" class="text-danger"></span>
+                </div>
+                <div class="form-group form-check">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="Product.Available" /> @Html.DisplayName("Готов к продаже")
+                    </label>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="product_subcategory">Подкатегория</label>
+                    <br />
+                    <select name="product_subcategory" id="product_subcategory" class="form-select">
+                        @foreach(var subcategory in Model.Subcategories)
+                        {
+                            <option value="@subcategory.Id">@subcategory.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <h4>Технические характеристики</h4>
+                    <table class="table table-bordered" id="tab">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <label for="spec_name">Название характеристики</label>
+                                </th>
+                                <th>
+                                    <label for="spec_val">Значение характеристики</label>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <input type="text" id="spec_name0" name="spec_name0" class="form-control" required/>
+                                </td>
+                                <td>
+                                    <input type="text" id="spec_val0" name="spec_val0" class="form-control" required/>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td>
+                                    <button class="btn btn-success add-btn" type="button" id="add">Добавить</button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="form_images">Фото товара</label>
+                    <input type="file" class="form-control" asp-for="FormImages" id="form_images" multiple />
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Создать" class="btn btn-primary" />
+                </div>
+                <input type="hidden" class="row-count" value="0"/>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/admin-panel.js" type="text/javascript"></script>
+}

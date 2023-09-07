@@ -1,0 +1,9 @@
+﻿@model string
+@{
+    ViewData["Title"] = "Не достаточно прав";
+}
+<div class="container-fluid mx-3 text-center">
+    <h1 class="text-danger">Доступ к ресурсу запрещен.</h1>
+    <p>У вас не достаточно прав для доступа к этому ресурсу. Требуемое разрешение: @(Model + ".")</p>
+    <a class="btn btn-outline-primary" asp-action="Index" asp-controller="Home">На главную</a>
+</div>

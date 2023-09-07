@@ -9,10 +9,16 @@ using Silerium.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authorization;
 using Silerium.PermissionAuth;
+using Microsoft.AspNetCore.Mvc.Razor;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.Configure<RazorViewEngineOptions>(options =>
+{
+    options.ViewLocationExpanders.Add(new Silerium.ViewLocationsExpanders.AdminLocationExpander());
+});
+
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddControllersWithViews();
@@ -41,7 +47,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             Name = "UserAuthCookie"
         };
-        options.ExpireTimeSpan = TimeSpan.FromHours(6);
+        options.Cookie.MaxAge = TimeSpan.FromDays(7);
     });
 
 builder.Services.AddLogging(logger => logger.AddConsole());
@@ -74,7 +80,6 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
 
 app.MapControllerRoute(
     name: "default",

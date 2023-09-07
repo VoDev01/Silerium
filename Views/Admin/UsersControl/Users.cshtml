@@ -1,0 +1,114 @@
+﻿@model Silerium.ViewModels.AdminModels.AdminUsersViewModel
+@{
+    ViewData["Title"] = "Пользователи";
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+    <form style="width: 200px; margin-bottom: 15px;" asp-action="SearchUsers" asp-controller="Admin">
+        <label class="form-label" for="searchUsers">Поиск</label>
+        <input type="search" class="form-control" name="searchUsers" id="searchUsers" />
+    </form>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayName("Имя")
+                </th>
+                <th>
+                    @Html.DisplayName("Фамилия")
+                </th>
+                <th>
+                    @Html.DisplayName("Пароль")
+                </th>
+                <th>
+                    @Html.DisplayName("Email")
+                </th>
+                <th>
+                    @Html.DisplayName("День рождения")
+                </th>
+                <th>
+                    @Html.DisplayName("Страна")
+                </th>
+                <th>
+                    @Html.DisplayName("Город")
+                </th>
+                <th>
+                    @Html.DisplayName("Номер телефона")
+                </th>
+                <th>
+                    @Html.DisplayName("В сети")
+                </th>
+                <th>
+                    @Html.DisplayName("Роли")
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.Users)
+            {
+                <tr>
+                    <td>
+                        @user.Name
+                    </td>
+                    <td>
+                        @user.Surname
+                    </td>
+                    <td>
+                        @user.Password
+                    </td>
+                    <td>
+                        @user.Email
+                    </td>
+                    <td>
+                        @if (user.BirthDate != null)
+                        {
+                            <p>@DateOnly.FromDateTime((DateTime)user.BirthDate)</p>
+                        }
+                        else
+                        {
+                            <p>Нет</p>
+                        }
+                    </td>
+                    <td>
+                        @user.Country
+                    </td>
+                    <td>
+                        @if (user.City != null)
+                        {
+                            @user.City
+                        }
+                        else
+                        {
+                            <p>Нет</p>
+                        }
+                    </td>
+                    <td>
+                        @{
+                            var phone = user.Phone ?? "Нет";
+                        }
+                        @phone
+                    </td>
+                    <td>
+                        @{
+                            var onlineString = user.IsOnline ? "Да" : "Нет";
+                        }
+                        @onlineString
+                    </td>
+                    <td>
+                        @foreach(var role in user.Roles)
+                        {
+                            <p>@role.Name</p>
+                        }
+                    </td>
+                    <td>
+                        <a class="btn btn-outline-dark" asp-action="UserRoles" asp-controller="Admin" asp-route-userId="@user.Id">Роли</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <form asp-action="UpdateUsers" asp-controller="Admin">
+        <button type="submit" class="btn btn-primary">Обновить</button>
+    </form>
+</div>
+@await Html.PartialAsync("~/Views/Shared/_PaginationPartial.cshtml", Model.PaginationModel)

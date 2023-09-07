@@ -1,3 +1,8 @@
+html, body 
+{
+    height: 100%;
+}
+
 html {
   font-size: 14px;
 }
@@ -21,6 +26,22 @@ html {
     }
 }
 
+.nav > .nav-item > .nav-link {
+    color: black;
+}
+
+.nav > .nav-item > .nav-link:hover {
+    color: #bbb;
+}
+
+.navbar > .navbar-collapse > .navbar-nav > .nav-item > .nav-link {
+    color: black;
+}
+
+.navbar > .navbar-collapse > .navbar-nav > .nav-item > .nav-link:hover {
+    color: #bbb;
+}
+
 html {
   position: relative;
   min-height: 100%;
@@ -30,20 +51,12 @@ body {
   margin-bottom: 60px;
 }
 
-.nav > .nav-item > .nav-link{
-    color: #ccc;
-}
-
-.nav > .nav-item > .nav-link:hover {
-    color: black;
-}
-
 .toolbar {
-    background-color: #6a677a;
+    background-color: rgba(75, 75, 75, 0.1);
 }
 
 .toolbar h2 {
-    color: white;
+    color: black;
 }
 
 .category-image, .subcategory-image, .product-image {
@@ -53,4 +66,10 @@ body {
 
 .ad-text {
     height: 800px;
+}
+#logout {
+    color: #ccc;
+}
+#logout:hover {
+    color: black;
 }

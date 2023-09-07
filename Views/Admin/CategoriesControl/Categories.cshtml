@@ -1,0 +1,63 @@
+﻿@model Silerium.ViewModels.AdminModels.AdminCategoryViewModel
+
+@{
+    ViewData["Title"] = "Категории товаров";
+    Layout = "_AdminPanelLayout";
+}
+<div class="mx-3">
+
+    <form style="width: 200px; margin-bottom: 15px;" asp-action="SearchCategories" asp-controller="Admin">
+        <label class="form-label" for="search_categories">Поиск</label>
+        <input type="search" class="form-control" name="search_categories" id="search_categories" />
+    </form>
+    <h1>Категории</h1>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayName("Название категории")
+                </th>
+                <th>
+                    @Html.DisplayName("Подкатегории")
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+        @if(Model.Categories.Count() != 0)
+        {
+            @foreach (var item in Model.Categories) 
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @if (item.Subcategories.Count() != 0)
+                        {
+                            @foreach (var subCategory in item.Subcategories)
+                            {
+                                <a class="text-decoration-none text-black" asp-action="EditSubCategory" asp-route-id="@subCategory.Id">
+                                    @Html.DisplayFor(modelItem => subCategory.Name)
+                                </a>
+                            }
+                        }
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <button type="button" class="dropdown-toggle btn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Действие
+                            </button>
+                            <div class="dropdown-menu shadow">
+                                <a asp-action="CreateCategory" class="dropdown-item">Создать</a>
+                                <a asp-action="EditCategory" asp-route-id="@item.Id" class="dropdown-item">Редактировать</a>
+                                <a asp-action="DeleteCategory" asp-route-id="@item.Id" class="dropdown-item">Удалить</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+</div>
+@await Html.PartialAsync("~/Views/Shared/_PaginationPartial.cshtml", Model.PaginationModel)
