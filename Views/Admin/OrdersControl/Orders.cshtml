@@ -1,12 +1,12 @@
-﻿@model IEnumerable<Silerium.Models.Order>
+﻿@model Silerium.ViewModels.AdminModels.AdminOrdersViewModel
 @{
     ViewData["Title"] = "Заказы";
     Layout = "_AdminPanelLayout";
 }
 <div class="mx-3">
     <form style="width: 200px; margin-bottom: 15px;" asp-action="SearchOrders" asp-controller="Admin">
-        <label class="form-label" for="searchOrders">Поиск</label>
-        <input type="search" class="form-control" name="searchOrders" id="searchOrders" />
+        <label class="form-label" for="search_orders">Поиск</label>
+        <input type="search" class="form-control" name="search_orders" id="search_orders" />
     </form>
     <table class="table table-bordered">
         <thead>
@@ -35,7 +35,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var order in Model)
+            @foreach (var order in Model.Orders)
             {
                 <tr>
                     <td>
@@ -83,11 +83,16 @@
                         <p style="color: @orderColor">@orderStatus</p>
                     </td>
                     <td>
-                        <a class="btn btn-secondary" asp-action="OrderDetails" asp-controller="Admin" asp-route-orderid="@order.OrderId.ToString()">Подробно</a>
-                    </td>
-                    <td>
-                        <a asp-action="EditOrder" class="btn btn-warning">Редактировать</a>
-                        <a asp-action="EditOrder" class="btn btn-danger">Отозвать</a>
+                        <div class="btn-group">
+                            <button type="button" class="btn" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
+                                Действие
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="btn btn-secondary" asp-action="OrderDetails" asp-controller="Admin" asp-route-orderid="@order.OrderId.ToString()">Подробно</a>
+                                <a asp-action="EditOrder" class="btn btn-warning">Редактировать</a>
+                                <a asp-action="EditOrder" class="btn btn-danger">Отозвать</a>
+                            </div>
+                        </div>
                     </td>
                 </tr>
             }
@@ -98,3 +103,4 @@
         <button type="submit" class="btn btn-primary">Обновить</button>
     </form>
 </div>
+@await Html.PartialAsync("~/Views/Shared/_PaginationPartial.cshtml", Model.PaginationModel)

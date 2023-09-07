@@ -5,7 +5,7 @@
 }
 <div class="mx-3">
     <h1>Разрешения для роли @Model.RoleName</h1>
-    <form asp-action="Permissions" asp-area="PermissionsControl" asp-controller="Admin">
+    <form asp-action="RolePermissions" asp-controller="Admin">
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -21,22 +21,28 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    @foreach (var permissionClaim in Model.RoleClaims)
-                    {
+                @for (int i = 0; i < Model.RoleClaims.Count; i++)
+                {
+                    <tr>
                         <td>
-                            @permissionClaim.Type
+                            @Model.RoleClaims[i].Type
                         </td>
                         <td>
-                            @permissionClaim.Value
+                            @Model.RoleClaims[i].Value
                         </td>
                         <td>
-                            <input type="checkbox" asp-for="@permissionClaim.Selected" class="form-check">
+                            <input hidden asp-for="@Model.RoleClaims[i].Type">
+                            <input hidden asp-for="@Model.RoleClaims[i].Value">
+                            <input type="checkbox" asp-for="@Model.RoleClaims[i].Selected" class="form-check">
                         </td>
-                    }
-                </tr>
+                    </tr>
+                }
             </tbody>
         </table>
+        <input hidden asp-for="@Model.RoleName">
         <button type="submit" class="btn btn-success">Сохранить</button>
     </form>
 </div>
+@section Pagination{
+    @await Html.PartialAsync("~/Views/Shared/_PaginationPartial.cshtml", Model.PaginationModel)
+}

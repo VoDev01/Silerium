@@ -1,4 +1,4 @@
-﻿@model List<Silerium.Models.Role>
+﻿@model Silerium.ViewModels.AdminModels.AdminRolesViewModel
 @{
     ViewData["Title"] = "Роли";
     Layout = "_AdminPanelLayout";
@@ -10,38 +10,34 @@
                 <td>
                     @Html.DisplayName("Роль")
                 </td>
-                <td>
-                    @Html.DisplayName("Статус")
-                </td>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                @foreach(var role in Model)
-                {
+            @foreach (var role in Model.Roles)
+            {
+                <tr>
                     <td>
                         @role.Name
                     </td>
                     <td>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button type="button" class="btn btn-default dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Действие
                             </button>
-                            <div class="dropdown-menu shadow animated--grow-in">
-                                <a class="dropdown-item" asp-action="EditRole" asp-area="RolesControl" asp-controller="Admin">Редактировать</a>
-                                <a class="dropdown-item" asp-action="DeleteRole" asp-area="RolesControl" asp-controller="Admin">Удалить</a>
+                            <div class="dropdown-menu shadow">
+                                <a class="dropdown-item" asp-action="EditRole" asp-controller="Admin">Редактировать</a>
+                                <a class="dropdown-item" asp-action="DeleteRole" asp-controller="Admin">Удалить</a>
                                 @if (role.Name != "SuperAdmin")
                                 {
-                                    <a style='margin-right:16px' asp-controller="RolePermissions" asp-area="PermissionsControl" asp-action="Admin"
-                                    asp-route-roleId="@role.Id" class="dropdown-item">
+                                    <a style='margin-right:16px' href="/Admin/PermissionsControl/RolePermissions?roleId=@role.Id" class="dropdown-item">
                                         Управление правами
                                     </a>
                                 }
                             </div>
                         </div>
-                    </td>
-                }
-            </tr>
+                </tr>
+            }
         </tbody>
     </table>
 </div>
+@await Html.PartialAsync("~/Views/Shared/_PaginationPartial.cshtml", Model.PaginationModel)

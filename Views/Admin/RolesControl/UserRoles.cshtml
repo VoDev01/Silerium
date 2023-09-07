@@ -5,7 +5,7 @@
 }
 <div class="mx-3">
     <h1>Изменение ролей пользователя @Model.UserName</h1>
-    <form asp-action="UserRoles" asp-area="RolesControl" asp-controller="Admin">
+    <form asp-action="UserRoles" asp-controller="Admin">
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -18,19 +18,21 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    @foreach (var role in Model.RolesVM)
-                    {
+                @for (int i = 0; i < Model.RolesVM.Count; i++)
+                {
+                    <tr>
                         <td>
-                            @role.RoleName
+                            <input hidden asp-for="@Model.RolesVM[i].RoleName" value="@Model.RolesVM[i].RoleName">
+                            @Model.RolesVM[i].RoleName
                         </td>
                         <td>
-                            <input type="checkbox" asp-for="@role.Selected" class="form-check">
+                            <input type="checkbox" asp-for="@Model.RolesVM[i].Selected" class="form-check">
                         </td>
-                    }
-                </tr>
+                    </tr>
+                }
             </tbody>
         </table>
+        <input hidden value="@Model.UserName" asp-for="@Model.UserName" />
         <button type="submit" class="btn btn-success">Сохранить</button>
     </form>
 </div>

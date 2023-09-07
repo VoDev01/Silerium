@@ -18,9 +18,7 @@ namespace Silerium.Controllers
         private string connectionString;
         public ILogger<CatalogController> logger;
         public static readonly int productsAtPage = 20;
-        private int pagesCount = 10;
-        private int pageMultiplier = 1;
-        public static int CurrentPageIndex { get; set; } = 1;
+        public static int CurrentLastPageIndex { get; set; } = 1;
         public CatalogController(ILogger<CatalogController> logger)
         {
             IConfiguration configuration = new ConfigurationBuilder()
@@ -46,7 +44,7 @@ namespace Silerium.Controllers
             }
         }
         public async Task<IActionResult> Products(string subcategory_name, string category_name, string? product_name, string sort_order,
-            bool available, bool filter = false, int page = 1)
+            bool available, bool search = false, int page = 1)
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
@@ -54,62 +52,77 @@ namespace Silerium.Controllers
                 ICategories categories = new CategoriesRepository(db);
                 IProducts products = new ProductsRepository(db);
 
-                CurrentPageIndex = page;
-                int firstPageIndex = 1;
-                int lastPageIndex = 10;
-                if (page > pagesCount * pageMultiplier)
+                List<Product> _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).ToList();
+                if (search)
                 {
-                    firstPageIndex = (pagesCount + 1) * (pageMultiplier - 1);
-                    lastPageIndex = pagesCount * pageMultiplier;
-                    pageMultiplier++;
+                    if (available)
+                    {
+                        if (product_name != null)
+                        {
+                            _products = _products.Where(p => p.Name.Contains(product_name) && p.Available == !available).ToList();
+                        }
+                        else if (category_name != "all" && subcategory_name != "all" && product_name == null)
+                        {
+                            _products = _products.Where(p =>
+                            p.Subcategory.Category.Name.ToLower().Contains(category_name)
+                            && p.Subcategory.Name.ToLower().Contains(category_name)
+                            && p.Available == !available).ToList();
+                        }
+                        else if (category_name != "all" && subcategory_name != "all" && product_name != null)
+                        {
+                            _products = _products.Where(p =>
+                            p.Subcategory.Category.Name.ToLower().Contains(category_name)
+                            && p.Subcategory.Name.ToLower().Contains(category_name)
+                            && p.Name.Contains(product_name)
+                            && p.Available == !available).ToList();
+                        }
+                    }
+                    else
+                    {
+                        if (product_name != null)
+                        {
+                            if (products.IfAny(p => p.Name.Contains(product_name)))
+                            {
+                                _products = _products.Where(p => p.Name.Contains(product_name) && p.Available == !available).ToList();
+                            }
+                        }
+                        else if (category_name != "all" && subcategory_name != "all" && product_name == null)
+                        {
+                            _products = _products.Where(p =>
+                            p.Subcategory.Category.Name.ToLower().Contains(category_name)
+                            && p.Subcategory.Name.ToLower().Contains(category_name)
+                            && p.Available == !available).ToList();
+                        }
+                        else if (category_name != "all" && subcategory_name != "all" && product_name != null)
+                        {
+                            _products = _products.Where(p =>
+                            p.Subcategory.Category.Name.ToLower().Contains(category_name)
+                            && p.Subcategory.Name.ToLower().Contains(category_name)
+                            && p.Name.Contains(product_name)
+                            && p.Available == !available).ToList();
+                        }
+                    }
                 }
-                List<Product> _products = new List<Product>();
                 switch (sort_order)
                 {
                     case nameof(SortOrder.NAME_DESC):
-                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
-                    .OrderByDescending(p => p.Name).ToList();
+                        _products = _products.OrderByDescending(p => p.Name).ToList();
                         break;
                     case nameof(SortOrder.NAME_ASC):
-                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
-                    .OrderBy(p => p.Name).ToList();
+                        _products = _products.OrderBy(p => p.Name).ToList();
                         break;
                     case nameof(SortOrder.POP_DESC):
-                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Include(p => p.Orders).Where(p => p.Page.Id == page)
-                    .OrderByDescending(p => p.Orders.Count()).ToList();
+                        _products = _products.OrderByDescending(p => p.Orders.Count()).ToList();
                         break;
                     case nameof(SortOrder.POP_ASC):
-                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Include(p => p.Orders).Where(p => p.Page.Id == page)
-                    .OrderBy(p => p.Orders.Count()).ToList();
+                        _products = _products.OrderBy(p => p.Orders.Count()).ToList();
                         break;
                     case nameof(SortOrder.PRICE_DESC):
-                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
-                    .OrderByDescending(p => p.PriceRub).ToList();
+                        _products = _products.OrderByDescending(p => p.PriceRub).ToList();
                         break;
                     case nameof(SortOrder.PRICE_ASC):
-                        _products = products.GetAllWithInclude(p => p.Images).Include(p => p.Specifications).Where(p => p.Page.Id == page)
-                    .OrderBy(p => p.PriceRub).ToList();
+                        _products = _products.OrderBy(p => p.PriceRub).ToList();
                         break;
-                }
-                if (filter)
-                {
-                    if (product_name != null)
-                    {
-                        if (products.IfAny(p => p.Name == product_name))
-                        {
-                            _products = _products.Where(p => p.Name.StartsWith(product_name)).ToList();
-                        }
-                    }
-                    else if (category_name != "all" && subcategory_name != "all")
-                    {
-                        _products = _products.Where(p =>
-                        p.Subcategory.Category.Name.ToLower() == category_name
-                        && p.Subcategory.Name.ToLower() == category_name).ToList();
-                    }
-                    if (available)
-                    {
-                        _products = _products.Where(p => p.Available == true).ToList();
-                    }
                 }
                 if (productsAtPage < _products.Count)
                     _products = _products.GetRange(productsAtPage * (page - 1), productsAtPage);
@@ -121,21 +134,22 @@ namespace Silerium.Controllers
                         SortOrder = sort_order,
                         CurrentPage = page
                     }));
-                return View(new ProductsCatalogViewModel
+                PaginationModel paginationModel = new PaginationModel("Products", "Catalog");
+                paginationModel.CurrentPage = page;
+                return View("~/Views/Catalog/Products.cshtml", new ProductsCatalogViewModel
                 {
                     SubcategoryName = subcategory_name,
                     Products = _products,
                     Subcategories = subcategories.GetAll().ToList(),
                     Categories = categories.GetAll().ToList(),
                     SortOrder = Enum.Parse<SortOrder>(sort_order),
-                    FirstPaginationIndex = firstPageIndex,
-                    LastPaginationIndex = lastPageIndex,
-                    CurrentPage = page
+                    PaginationModel = paginationModel
                 });
             }
         }
         [HttpPost]
-        public IActionResult Products(string? product_name, string category_name, string subcategory_name, string sort_order, bool available, int page)
+        public IActionResult ProductsFilter(string subcategory_name, string category_name, string? product_name, string sort_order,
+            bool available = true, int page = 1)
         {
             return RedirectToAction("Products", "Catalog", new
             {
@@ -144,7 +158,7 @@ namespace Silerium.Controllers
                 subcategory_name,
                 sort_order,
                 available,
-                filter = true,
+                search = true,
                 page
             });
         }
@@ -153,8 +167,8 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IProducts products = new ProductsRepository(db);
-                ProductViewModel productVM = new ProductViewModel 
-                { 
+                ProductViewModel productVM = new ProductViewModel
+                {
                     Product = products.GetAllWithInclude(p => p.Images).Include(p => p.Subcategory).Where(p => p.Id == id).FirstOrDefault()
                 };
                 return View(productVM);
@@ -162,12 +176,12 @@ namespace Silerium.Controllers
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         [HttpPost]
-        public IActionResult AddToCart(int id, int amount) 
+        public IActionResult AddToCart(int id, int amount)
         {
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IProducts products = new ProductsRepository(db);
-                IOrders orders = new OrdersRepository(db); 
+                IOrders orders = new OrdersRepository(db);
                 IUsers users = new UsersRepository(db);
                 string userEmail = HttpContext.User.FindFirstValue("Name");
                 User? user = users.Find(u => u.Email == userEmail).FirstOrDefault();
@@ -184,8 +198,8 @@ namespace Silerium.Controllers
                         User = user
                     });
                     orders.Save();
-                    ProductsFiltersViewModel? productsFiltersDTO = 
-                        JsonSerializer.Deserialize(HttpContext.Session.GetString("ProductsFilters") ?? "", typeof(ProductsFiltersViewModel)) 
+                    ProductsFiltersViewModel? productsFiltersDTO =
+                        JsonSerializer.Deserialize(HttpContext.Session.GetString("ProductsFilters") ?? "", typeof(ProductsFiltersViewModel))
                         as ProductsFiltersViewModel;
                     if (productsFiltersDTO != null)
                     {

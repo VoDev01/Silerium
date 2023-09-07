@@ -1,5 +1,5 @@
 ﻿﻿@using System.Globalization
-@model IEnumerable<Silerium.Models.Product>
+@model Silerium.ViewModels.AdminModels.AdminProductsViewModel
 
 @{
     ViewData["Title"] = "Товары";
@@ -12,10 +12,6 @@
         <input type="search" class="form-control" name="searchProducts" id="searchProducts" />
     </form>
     <h1>Товары</h1>
-    
-    <p>
-        <a asp-action="CreateProduct" class="btn btn-success">Создать новый товар</a>
-    </p>
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -40,39 +36,50 @@
             </tr>
         </thead>
         <tbody>
-    @foreach (var item in Model) {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Name)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Description)
-                </td>
-                <td>
-                    <span>@item.PriceRub.ToString("N1", CultureInfo.CreateSpecificCulture("ru-RU")) &#8381;</span>
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.StockAmount)<span>шт.</span>
-                </td>
-                <td>
-                    @if (item.Available)
-                    {
-                        <p>Да</p>
-                    }
-                    else
-                    {
-                        <p>Нет</p>
-                    }
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Subcategory.Name)
-                </td>
-                <td>
-                    <a asp-action="EditProduct" asp-route-id="@item.Id" class="btn btn-warning">Редактировать</a>
-                    <a asp-action="DeleteProduct" asp-route-id="@item.Id" class="btn btn-danger">Удалить</a>
-                </td>
-            </tr>
-    }
+            @foreach (var item in Model.Products)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Description)
+                    </td>
+                    <td>
+                        <span>@item.PriceRub.ToString("N1", CultureInfo.CreateSpecificCulture("ru-RU")) &#8381;</span>
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StockAmount)<span>шт.</span>
+                    </td>
+                    <td>
+                        @if (item.Available)
+                        {
+                            <p>Да</p>
+                        }
+                        else
+                        {
+                            <p>Нет</p>
+                        }
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Subcategory.Name)
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <button type="button" class="dropdown-toggle btn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Действие
+                            </button>
+                            <div class="dropdown-menu shadow">
+                                <a asp-action="CreateProduct" class="dropdown-item">Создать</a>
+                                <a asp-action="EditProduct" asp-route-id="@item.Id" class="dropdown-item">Редактировать</a>
+                                <a asp-action="DeleteProduct" asp-route-id="@item.Id" class="dropdown-item">Удалить</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
         </tbody>
     </table>
 </div>
+
+@await Html.PartialAsync("~/Views/Shared/_PaginationPartial.cshtml", Model.PaginationModel)

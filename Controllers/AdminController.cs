@@ -2,13 +2,14 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
 using Silerium.Models.Repositories;
 using Silerium.Services;
+using Silerium.ViewModels;
+using Silerium.ViewModels.AdminModels;
 using Silerium.ViewModels.PermissionAuthorizationModels;
 using Silerium.ViewModels.ProductsModels;
 using System.Data;
@@ -30,7 +31,6 @@ namespace Silerium.Controllers
             this.logger = logger;
             this.authorizationService = authorizationService;
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult NoPermissions(string p)
         {
             return View("NoPermissions", (object)p);
@@ -42,21 +42,32 @@ namespace Silerium.Controllers
         }
         [Route("Admin/CategoriesControl/Categories")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
-        public IActionResult Categories()
+        public IActionResult Categories(string? search_categories, int page = 1)
         {
             if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.View)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     ICategories categories = new CategoriesRepository(db);
-                    List<Category> categoriesList = categories.GetAllWithInclude(c => c.Subcategories).ToList();
-                    return View(categoriesList);
+                    List<Category> _categories = categories.GetAllWithInclude(c => c.Subcategories).ToList();
+                    if(search_categories != null)
+                    {
+                        _categories = _categories.Where(c => c.Id.ToString() == search_categories || c.Name.Contains(search_categories)).ToList();
+                    }
+                    AdminCategoryViewModel adminCategoryViewModel = new AdminCategoryViewModel
+                    {
+                        Categories = _categories,
+                        PaginationModel = new PaginationModel("Categories", "Admin")
+                    };
+                    adminCategoryViewModel.PaginationModel.CurrentPage = page;
+                    ModelPaginationService.CountPages(adminCategoryViewModel.PaginationModel, adminCategoryViewModel.Categories.Count);
+                    return View(adminCategoryViewModel);
                 }
             }
             else
             {
                 string permission = RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.View);
-                logger.LogInformation($"User {User.Identity.Name} doesn't have permission {permission} to access resource.");
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission {permission} to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -65,14 +76,14 @@ namespace Silerium.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult CreateCategory()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.Create)).Result.Succeeded)
             {
                 return View(new CategoryViewModel());
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Create);
-                logger.LogInformation($"User {User.Identity.Name} doesn't have permission {permission} to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.Create);
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission {permission} to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -91,7 +102,7 @@ namespace Silerium.Controllers
                     int num = categories.GetAll().Count();
                     using (var fstream = System.IO.File.Create(
                         Path.Combine(
-                            Directory.GetCurrentDirectory(), 
+                            Directory.GetCurrentDirectory(),
                             "wwwroot",
                             "images",
                             "categories",
@@ -118,12 +129,12 @@ namespace Silerium.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult EditCategory(int id)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Edit)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.Edit)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     ICategories categories = new CategoriesRepository(db);
-                    Category category = categories.GetByID(id-1);
+                    Category category = categories.GetByID(id - 1);
                     CategoryViewModel categoryVM = new CategoryViewModel();
                     categoryVM.Category = category;
                     return View(categoryVM);
@@ -131,8 +142,8 @@ namespace Silerium.Controllers
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Edit);
-                logger.LogInformation($"User {User.Identity.Name} doesn't have permission  {permission}  to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.Edit);
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission  {permission}  to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -148,7 +159,7 @@ namespace Silerium.Controllers
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     ICategories categories = new CategoriesRepository(db);
-                    Category category = categories.GetByID(categoryVM.Category.Id-1);
+                    Category category = categories.GetByID(categoryVM.Category.Id - 1);
                     int num = categories.GetAll().Count();
                     using (var fstream = System.IO.File.Create(
                         Path.Combine(
@@ -179,19 +190,19 @@ namespace Silerium.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult DeleteCategory(int id)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Delete)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.Delete)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     ICategories categories = new CategoriesRepository(db);
-                    Category category = categories.GetAllWithInclude(c => c.Subcategories).ElementAt(id-1);
+                    Category category = categories.GetAllWithInclude(c => c.Subcategories).ElementAt(id - 1);
                     return View(category);
                 }
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Categories", PermissionType.Delete);
-                logger.LogInformation($"User {User.Identity.Name} doesn't have permission  {permission}  to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Category", PermissionType.Delete);
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission  {permission}  to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -221,21 +232,27 @@ namespace Silerium.Controllers
         }
         [Route("Admin/SubcategoriesControl/Subcategories")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
-        public IActionResult Subcategories()
+        public IActionResult Subcategories(int page = 1)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.View)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategory", PermissionType.View)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     ISubcategories subcategories = new SubcategoriesRepository(db);
-                    List<Subcategory> subcategoriesList = subcategories.GetAllWithInclude(c => c.Category).ToList();
-                    return View(subcategoriesList);
+                    AdminSubcategoriesViewModel subcategoriesViewModel = new AdminSubcategoriesViewModel
+                    {
+                        Subcategories = subcategories.GetAllWithInclude(c => c.Category).ToList(),
+                        PaginationModel = new PaginationModel("Subcategories", "Admin")
+                    };
+                    subcategoriesViewModel.PaginationModel.CurrentPage = page;
+                    ModelPaginationService.CountPages(subcategoriesViewModel.PaginationModel, subcategoriesViewModel.Subcategories.Count);
+                    return View(subcategoriesViewModel);
                 }
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.View);
-                logger.LogInformation($"User {User.Identity.Name} doesn't have permission {permission} to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategory", PermissionType.View);
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission {permission} to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -244,18 +261,18 @@ namespace Silerium.Controllers
         // GET: AdminController/Create
         public IActionResult CreateSubcategory()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategory", PermissionType.Create)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     ICategories categories = new CategoriesRepository(db);
-                    return View(new SubcategoryViewModel { Subcategory = new Subcategory(), Categories = categories.GetAll().ToList()});
+                    return View(new SubcategoryViewModel { Subcategory = new Subcategory(), Categories = categories.GetAll().ToList() });
                 }
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Create);
-                logger.LogInformation($"У пользователя {User.Identity.Name} нет разрешения {permission} для доступа к ресурсу.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategory", PermissionType.Create);
+                logger.LogInformation($"У пользователя {User.FindFirst("Name").Value} нет разрешения {permission} для доступа к ресурсу.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -307,7 +324,7 @@ namespace Silerium.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult EditSubcategory(int id)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Edit)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategory", PermissionType.Edit)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -318,8 +335,8 @@ namespace Silerium.Controllers
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Edit);
-                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategory", PermissionType.Edit);
+                logger.LogInformation($"User  {User.FindFirst("Name").Value}  doesn't have permission   {permission}   to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -356,10 +373,10 @@ namespace Silerium.Controllers
                     return RedirectToRoute("Admin/SubcategoriesControl/Subcategories");
                 }
             }
-            catch(Exception e) 
+            catch (Exception e)
             {
-                logger.LogError(e.Message); 
-                return View(); 
+                logger.LogError(e.Message);
+                return View();
             }
         }
         // GET: AdminController/Delete/5
@@ -367,7 +384,7 @@ namespace Silerium.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult DeleteSubcategory(int id)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Delete)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Subcategory", PermissionType.Delete)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -379,8 +396,8 @@ namespace Silerium.Controllers
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategories", PermissionType.Delete);
-                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Subcategory", PermissionType.Delete);
+                logger.LogInformation($"User  {User.FindFirst("Name").Value}  doesn't have permission   {permission}   to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -401,7 +418,7 @@ namespace Silerium.Controllers
                     return RedirectToRoute("Admin/SubcategoriesControl/Subcategories");
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 logger.LogError(e.Message);
                 return View();
@@ -409,21 +426,31 @@ namespace Silerium.Controllers
         }
         [Route("Admin/ProductsControl/Products")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
-        public IActionResult Products()
+        public IActionResult Products(string? search_products, int page = 1)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.View)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Product", PermissionType.View)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     IProducts products = new ProductsRepository(db);
-                    List<Product> productsList = products.GetAllWithInclude(p => p.Subcategory).ToList();
-                    return View(productsList);
+                    List<Product> _products = products.GetAllWithInclude(p => p.Subcategory).ToList();
+                    if(search_products != null)
+                    {
+                        _products = _products.Where(p => p.Id.ToString() == search_products || p.Name.Contains(search_products)).ToList();
+                    }
+                    AdminProductsViewModel productsViewModel = new AdminProductsViewModel
+                    {   Products = _products,
+                        PaginationModel = new PaginationModel("Products", "Admin")
+                    };
+                    productsViewModel.PaginationModel.CurrentPage = page;
+                    ModelPaginationService.CountPages(productsViewModel.PaginationModel, productsViewModel.Products.Count);
+                    return View(productsViewModel);
                 }
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.View);
-                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Product", PermissionType.View);
+                logger.LogInformation($"User  {User.FindFirst("Name").Value}  doesn't have permission   {permission}   to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -431,7 +458,7 @@ namespace Silerium.Controllers
         // GET: AdminController/Create
         public IActionResult CreateProduct()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Create)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Product", PermissionType.Create)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -444,8 +471,8 @@ namespace Silerium.Controllers
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Create);
-                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Product", PermissionType.Create);
+                logger.LogInformation($"User  {User.FindFirst("Name").Value}  doesn't have permission   {permission}   to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -471,10 +498,10 @@ namespace Silerium.Controllers
                     }
                     else
                     {
-                        if (products.Find(p => p.Page.Id == CatalogController.CurrentPageIndex).Count() > CatalogController.productsAtPage)
+                        if (products.Find(p => p.Page.Id == CatalogController.CurrentLastPageIndex).Count() > CatalogController.productsAtPage)
                             productVM.Product.Page = new Page { Products = new List<Product>() { productVM.Product } };
                         else
-                            productVM.Product.Page = pages.GetByID(CatalogController.CurrentPageIndex);
+                            productVM.Product.Page = pages.GetByID(CatalogController.CurrentLastPageIndex);
                     }
 
                     int num = products.GetAll().Count();
@@ -520,7 +547,7 @@ namespace Silerium.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult EditProduct(int id)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Edit)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Product", PermissionType.Edit)).Result.Succeeded)
             {
                 try
                 {
@@ -539,8 +566,8 @@ namespace Silerium.Controllers
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Edit);
-                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Product", PermissionType.Edit);
+                logger.LogInformation($"User  {User.FindFirst("Name").Value}  doesn't have permission   {permission}   to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -569,7 +596,7 @@ namespace Silerium.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult DeleteProduct(int id)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Delete)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Product", PermissionType.Delete)).Result.Succeeded)
             {
                 try
                 {
@@ -588,8 +615,8 @@ namespace Silerium.Controllers
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Products", PermissionType.Delete);
-                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Product", PermissionType.Delete);
+                logger.LogInformation($"User  {User.FindFirst("Name").Value}  doesn't have permission   {permission}   to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -604,8 +631,8 @@ namespace Silerium.Controllers
                     IProducts products = new ProductsRepository(db);
                     IPages pages = new PagesRepository(db);
                     Product product = products.GetByID(id - 1);
-                    Page page = pages.Find(p => p.Products.Contains(product)).FirstOrDefault() 
-                        ?? pages.Find(p => p.Id == CatalogController.CurrentPageIndex).FirstOrDefault();
+                    Page page = pages.Find(p => p.Products.Contains(product)).FirstOrDefault()
+                        ?? pages.Find(p => p.Id == CatalogController.CurrentLastPageIndex).FirstOrDefault();
                     products.Remove(product);
                     products.Save();
                     page.Products.Remove(product);
@@ -625,20 +652,27 @@ namespace Silerium.Controllers
         }
         [Route("Admin/UsersControl/Users")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
-        public IActionResult Users()
+        public IActionResult Users(int page = 1)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Users", PermissionType.View)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("User", PermissionType.View)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     IUsers users = new UsersRepository(db);
-                    return View(users.GetAll().ToList());
+                    AdminUsersViewModel usersViewModel = new AdminUsersViewModel
+                    {
+                        Users = users.GetAll().ToList(),
+                        PaginationModel = new PaginationModel("Users", "Admin")
+                    };
+                    usersViewModel.PaginationModel.CurrentPage = page;
+                    ModelPaginationService.CountPages(usersViewModel.PaginationModel, usersViewModel.Users.Count);
+                    return View(usersViewModel);
                 }
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Users", PermissionType.View);
-                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("User", PermissionType.View);
+                logger.LogInformation($"User  {User.FindFirst("Name").Value}  doesn't have permission   {permission}   to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -650,21 +684,38 @@ namespace Silerium.Controllers
         }
         [Route("Admin/OrdersControl/Orders")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
-        public IActionResult Orders()
+        public IActionResult Orders(string? search_orders, int page = 1)
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.View)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Order", PermissionType.View)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     IOrders orders = new OrdersRepository(db);
-                    IEnumerable<Order> orderModel = orders.GetAllWithInclude(o => o.User).Include(o => o.Product).ToList();
-                    return View(orderModel);
+                    List<Order> _orders = orders.GetAllWithInclude(o => o.User).Include(o => o.Product).ToList();
+                    if(search_orders != null)
+                    {
+                        _orders = _orders.Where(o => 
+                        o.User.Id.ToString() == search_orders 
+                        || o.User.Name.Contains(search_orders) 
+                        || o.User.Email.Contains(search_orders)
+                        || o.OrderDate == DateTime.Parse(search_orders)
+                        || o.OrderAddress.Contains(search_orders)
+                        || o.OrderId.ToString().Contains(search_orders)).ToList();
+                    }
+                    AdminOrdersViewModel ordersViewModel = new AdminOrdersViewModel
+                    {
+                        Orders = _orders,
+                        PaginationModel = new PaginationModel("Orders", "Admin")
+                    };
+                    ordersViewModel.PaginationModel.CurrentPage = page;
+                    ModelPaginationService.CountPages(ordersViewModel.PaginationModel, ordersViewModel.Orders.Count);
+                    return View(ordersViewModel);
                 }
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.View);
-                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Order", PermissionType.View);
+                logger.LogInformation($"User  {User.FindFirst("Name").Value}  doesn't have permission   {permission}   to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -678,7 +729,7 @@ namespace Silerium.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         public IActionResult RecallOrder()
         {
-            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.Delete)).Result.Succeeded)
+            if (authorizationService.AuthorizeAsync(User, RolesManagerService.GeneratePermissionNameForModel("Order", PermissionType.Delete)).Result.Succeeded)
             {
                 using (var db = new ApplicationDbContext(connectionString))
                 {
@@ -689,8 +740,8 @@ namespace Silerium.Controllers
             }
             else
             {
-                string permission = RolesManagerService.GeneratePermissionNameForModel("Orders", PermissionType.Delete);
-                logger.LogInformation($"User  {User.Identity.Name}  doesn't have permission   {permission}   to access resource.");
+                string permission = RolesManagerService.GeneratePermissionNameForModel("Order", PermissionType.Delete);
+                logger.LogInformation($"User  {User.FindFirst("Name").Value}  doesn't have permission   {permission}   to access resource.");
                 return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
@@ -720,23 +771,32 @@ namespace Silerium.Controllers
                 return View(orders.GetAllWithInclude(o => o.User).Include(o => o.Product).Where(u => u.OrderId == guid).ToList().FirstOrDefault());
             }
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         [Route("Admin/RolesControl/UserRoles")]
         public IActionResult UserRoles(int userId)
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (User.HasClaim("Role", "SuperAdmin"))
             {
-                IRoles roles = new RolesRepository(db);
-                IUsers users = new UsersRepository(db);
-                User user = users.GetByID(userId);
-                List<UserRolesViewModel> userRoles = new List<UserRolesViewModel>();
-                foreach(var role in roles.GetAll().ToList())
+                using (var db = new ApplicationDbContext(connectionString))
                 {
-                    bool isInRole = user.Roles.Any(u => u.Name == role.Name);
-                    userRoles.Add(new UserRolesViewModel { RoleName = role.Name, Selected = isInRole });
+                    IRoles roles = new RolesRepository(db);
+                    IUsers users = new UsersRepository(db);
+                    User user = users.GetAllWithInclude(u => u.Roles).Where(u => u.Id == userId).FirstOrDefault();
+                    List<UserRolesViewModel> userRoles = new List<UserRolesViewModel>();
+                    foreach (var role in roles.GetAll())
+                    {
+                        bool isInRole = user.Roles.Any(u => u.Name == role.Name);
+                        userRoles.Add(new UserRolesViewModel { RoleName = role.Name, Selected = isInRole });
+                    }
+                    ManageUserRolesViewModel manageUserRolesViewModel = new ManageUserRolesViewModel { RolesVM = userRoles, UserName = user.Name };
+                    return View(manageUserRolesViewModel);
                 }
-                ManageUserRolesViewModel manageUserRolesViewModel = new ManageUserRolesViewModel { RolesVM = userRoles, UserName = user.Name };
-                return View(manageUserRolesViewModel);
+            }
+            else
+            {
+                string permission = "SuperAdmin role";
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission {permission} to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
         [Route("Admin/RolesControl/UserRoles")]
@@ -747,34 +807,60 @@ namespace Silerium.Controllers
             {
                 IRoles roles = new RolesRepository(db);
                 IUsers users = new UsersRepository(db);
-                User user = users.Find(u => u.Name == manageUserRolesViewModel.UserName).FirstOrDefault();
+                User user = users.GetAllWithInclude(u => u.Roles).Where(u => u.Name == manageUserRolesViewModel.UserName).FirstOrDefault();
                 user.Roles.Clear();
 
                 foreach (var role in manageUserRolesViewModel.RolesVM)
                 {
                     if (role.Selected)
                     {
-                        user.Roles.Add(new Role { Name = role.RoleName });
+                        user.Roles.Add(roles.Find(r => r.Name == role.RoleName).FirstOrDefault());
                     }
                 }
-                return RedirectToAction("UserRoles", "Admin", new { userId = user.Id });
+                users.Save();
+                return RedirectToAction("Users", "Admin");
             }
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         [Route("Admin/RolesControl/Roles")]
-        public IActionResult Roles()
+        public IActionResult Roles(int page = 1)
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (User.HasClaim("Role", "SuperAdmin"))
             {
-                IRoles roles = new RolesRepository(db);
-                return View(roles.GetAll().ToList());
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IRoles roles = new RolesRepository(db); 
+                    AdminRolesViewModel rolesViewModel = new AdminRolesViewModel
+                    {
+                        Roles = roles.GetAll().ToList(),
+                        PaginationModel = new PaginationModel("Roles", "Admin")
+                    };
+                    rolesViewModel.PaginationModel.CurrentPage = page;
+                    ModelPaginationService.CountPages(rolesViewModel.PaginationModel, rolesViewModel.Roles.Count);
+                    return View();
+                }
+            }
+            else
+            {
+                string permission = "SuperAdmin role";
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission {permission} to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         [Route("Admin/RolesControl/CreateRole")]
         public IActionResult CreateRole()
         {
-            return View();
+            if (User.HasClaim("Role", "SuperAdmin"))
+            {
+                return View();
+            }
+            else
+            {
+                string permission = "SuperAdmin role";
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission {permission} to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
+            }
         }
         [Route("Admin/RolesControl/CreateRole")]
         [HttpPost]
@@ -792,7 +878,7 @@ namespace Silerium.Controllers
                 return RedirectToRoute("Admin/RolesControl/Roles");
             }
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         [Route("Admin/RolesControl/EditRole")]
         public IActionResult EditRole(int roleId)
         {
@@ -807,59 +893,115 @@ namespace Silerium.Controllers
         [HttpPost]
         public IActionResult EditRole(string roleName)
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (User.HasClaim("Role", "SuperAdmin"))
             {
-                IRoles roles = new RolesRepository(db);
-                Role role = roles.Find(r => r.Name == roleName).FirstOrDefault();
-                role.Name = roleName;
-                roles.Save();
-                return RedirectToRoute("Admin/RolesControl/Roles");
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IRoles roles = new RolesRepository(db);
+                    Role role = roles.Find(r => r.Name == roleName).FirstOrDefault();
+                    role.Name = roleName;
+                    roles.Save();
+                    return RedirectToRoute("Admin/RolesControl/Roles");
+                }
+            }
+            else
+            {
+                string permission = "SuperAdmin role";
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission {permission} to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         [Route("Admin/RolesControl/DeleteRole")]
         public IActionResult DeleteRole(int roleId)
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (User.HasClaim("Role", "SuperAdmin"))
             {
-                IRoles roles = new RolesRepository(db);
-                Role role = roles.GetByID(roleId);
-                return View(role.Name);
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IRoles roles = new RolesRepository(db);
+                    Role role = roles.GetByID(roleId);
+                    return View(role.Name);
+                }
+            }
+            else
+            {
+                string permission = "SuperAdmin role";
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission {permission} to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
         [Route("Admin/RolesControl/DeleteRole")]
         [HttpPost]
         public IActionResult DeleteRole(string roleName)
         {
-            using (var db = new ApplicationDbContext(connectionString))
+            if (User.HasClaim("Role", "SuperAdmin"))
             {
-                IRoles roles = new RolesRepository(db);
-                Role role = roles.Find(r => r.Name == roleName).FirstOrDefault();
-                roles.Remove(role);
-                roles.Save();
-                return RedirectToRoute("Admin/RolesControl/Roles");
-            }
-        }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme, Roles = "SuperAdmin")]
-        [Route("Admin/PermissionsControl/RolePermissions")]
-        public IActionResult RolePermissions(int roleId)
-        {
-            using(var db = new ApplicationDbContext(connectionString))
-            {
-                IPermissions permissions = new PermissionsRepository(db);
-                IRoles roles = new RolesRepository(db);
-                Role role = roles.GetAllWithInclude(r => r.Permissions).Where(r => r.Id == roleId).FirstOrDefault();
-                PermissionViewModel permissionViewModel = new PermissionViewModel();
-                permissionViewModel.RoleName = role.Name;
-                foreach(var permission in permissions.GetAll().ToList())
+                using (var db = new ApplicationDbContext(connectionString))
                 {
-                    bool hasPermission = role.Permissions.Any(r => r.Id == permission.Id);
-                    permissionViewModel.RoleClaims.Add(new RoleClaimViewModel { Type = typeof(Permission).Name, Value = permission.PermissionName, Selected = hasPermission });
+                    IRoles roles = new RolesRepository(db);
+                    Role role = roles.Find(r => r.Name == roleName).FirstOrDefault();
+                    roles.Remove(role);
+                    roles.Save();
+                    return RedirectToRoute("Admin/RolesControl/Roles");
                 }
-                return View(permissionViewModel);
+            }
+            else
+            {
+                string permission = "SuperAdmin role";
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission {permission} to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
+        [Route("Admin/PermissionsControl/RolePermissions")]
+        public IActionResult RolePermissions(int roleId, int page = 1)
+        {
+            if (User.HasClaim("Role", "SuperAdmin"))
+            {
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IPermissions permissions = new PermissionsRepository(db);
+                    IRoles roles = new RolesRepository(db);
+                    Role role = roles.GetAllWithInclude(r => r.Permissions).Where(r => r.Id == roleId).FirstOrDefault();
+                    PermissionViewModel permissionViewModel = new PermissionViewModel();
+                    permissionViewModel.RoleClaims = new List<RoleClaimViewModel>();
+                    permissionViewModel.RoleName = role.Name;
+
+                    permissionViewModel.PaginationModel = new PaginationModel("RolePermissions", "Admin");
+                    permissionViewModel.PaginationModel.CurrentPage = page;
+                    int permissionsCount = 0;
+                    for (int i = 0;i < permissions.GetAll().Count();i++)
+                    {
+                        bool hasPermission = role.Permissions.Any(r => r.PermissionName == permissions.GetByID(i).PermissionName);
+                        if (ModelPaginationService.ItemOnPage(permissionViewModel.PaginationModel, i))
+                        {
+                            permissionViewModel.RoleClaims.Add(
+                                new RoleClaimViewModel
+                                {
+                                    Type = typeof(Permission).Name,
+                                    Value = permissions.GetByID(i).PermissionName,
+                                    Selected = hasPermission
+                                });
+                        }
+                        permissionsCount++;
+                    }
+
+                    permissionViewModel.PaginationModel.RouteParameters = $"&roleId={roleId}";
+                    ModelPaginationService.CountPages(permissionViewModel.PaginationModel, permissionsCount);
+
+                    return View(permissionViewModel);
+                }
+            }
+            else
+            {
+                string permission = "SuperAdmin role";
+                logger.LogInformation($"User {User.FindFirst("Name").Value} doesn't have permission {permission} to access resource.");
+                return View("~/Views/Admin/NoPermissions.cshtml", permission);
             }
         }
         [Route("Admin/PermissionsControl/RolePermissions")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
         [HttpPost]
         public IActionResult RolePermissions(PermissionViewModel permissionViewModel)
         {
@@ -867,16 +1009,23 @@ namespace Silerium.Controllers
             {
                 IPermissions permissions = new PermissionsRepository(db);
                 IRoles roles = new RolesRepository(db);
-                Role role = roles.GetAllWithInclude(r => r.Permissions).Where(r => r.Name == permissionViewModel.RoleName).FirstOrDefault();
-                role.Permissions.Clear();
+                IRolesPermissions rolesPermissions = new RolesPermissionsRepository(db);
                 foreach (var permission in permissionViewModel.RoleClaims)
                 {
                     if (permission.Selected)
                     {
-                        role.Permissions.Add(permissions.Find(p => p.PermissionName == permission.Value).FirstOrDefault());
+                        Permission permissionModel = permissions.Find(p => p.PermissionName == permission.Value).FirstOrDefault();
+                        rolesPermissions.Add(new RolePermissions
+                        {
+                            PermissionId = permissionModel.Id,
+                            RoleId = roles.Find(r => r.Name == permissionViewModel.RoleName).FirstOrDefault().Id,
+                            Granted = true,
+                            GrantedByUser = User.FindFirst("Name").Value
+                        });
                     }
                 }
-                return RedirectToRoute("Admin/PermissionsControl/Roles?roleId=" + role.Id);
+                rolesPermissions.Save();
+                return RedirectToAction("Roles", "Admin");
             }
         }
     }

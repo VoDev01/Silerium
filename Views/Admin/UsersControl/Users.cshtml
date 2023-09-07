@@ -1,4 +1,4 @@
-﻿@model List<Silerium.Models.User>
+﻿@model Silerium.ViewModels.AdminModels.AdminUsersViewModel
 @{
     ViewData["Title"] = "Пользователи";
     Layout = "_AdminPanelLayout";
@@ -11,9 +11,6 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>
-                    @Html.DisplayName("Id")
-                </th>
                 <th>
                     @Html.DisplayName("Имя")
                 </th>
@@ -47,12 +44,9 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var user in Model)
+            @foreach (var user in Model.Users)
             {
                 <tr>
-                    <td>
-                        @user.Id
-                    </td>
                     <td>
                         @user.Name
                     </td>
@@ -106,12 +100,15 @@
                             <p>@role.Name</p>
                         }
                     </td>
+                    <td>
+                        <a class="btn btn-outline-dark" asp-action="UserRoles" asp-controller="Admin" asp-route-userId="@user.Id">Роли</a>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
-    <a class="btn btn-primary" asp-action="UserRoles" asp-area="RolesControl" asp-controller="Admin">Роли пользователя</a>
     <form asp-action="UpdateUsers" asp-controller="Admin">
         <button type="submit" class="btn btn-primary">Обновить</button>
     </form>
 </div>
+@await Html.PartialAsync("~/Views/Shared/_PaginationPartial.cshtml", Model.PaginationModel)
