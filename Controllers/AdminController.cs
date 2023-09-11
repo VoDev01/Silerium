@@ -662,7 +662,7 @@ namespace Silerium.Controllers
                     IUsers users = new UsersRepository(db);
                     AdminUsersViewModel usersViewModel = new AdminUsersViewModel
                     {
-                        Users = users.GetAll().ToList(),
+                        Users = users.GetAllWithInclude(u => u.Roles).ToList(),
                         PaginationModel = new PaginationModel("Users", "Admin")
                     };
                     usersViewModel.PaginationModel.CurrentPage = page;
@@ -838,7 +838,7 @@ namespace Silerium.Controllers
                     };
                     rolesViewModel.PaginationModel.CurrentPage = page;
                     ModelPaginationService.CountPages(rolesViewModel.PaginationModel, rolesViewModel.Roles.Count);
-                    return View();
+                    return View(rolesViewModel);
                 }
             }
             else

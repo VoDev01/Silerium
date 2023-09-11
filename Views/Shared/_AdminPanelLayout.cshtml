@@ -54,7 +54,6 @@
                     </ul>
                 </div>
                 <div class="col col-lg-8 col-xl-9 px-3">
-                    <partial name="_Notification" />
                     @RenderBody()
                 </div>
             </div>
@@ -76,6 +75,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <partial name="_Notification" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

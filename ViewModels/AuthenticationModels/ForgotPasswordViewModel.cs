@@ -16,5 +16,7 @@ namespace Silerium.ViewModels.AuthenticationModels
         [Required(ErrorMessage = "Введите пароль повторно.")]
         [Remote(action: "CheckPasswords", controller: "User", AdditionalFields = "ConfirmPassword", ErrorMessage = "Пароли не совпадают.")]
         public string ConfirmPassword { get; set; }
+        public bool CodeConfirm { get; set; }
+        public int Code { get; set; }
     }
 }

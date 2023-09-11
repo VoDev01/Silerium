@@ -18,6 +18,8 @@ using Silerium.Data.Seeds;
 using Silerium.ViewModels.UserModels;
 using Silerium.Services.EmailServices;
 using Silerium.ViewModels.AuthenticationModels;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Silerium.Controllers
 {
@@ -139,12 +141,12 @@ namespace Silerium.Controllers
                 IUsers users = new UsersRepository(db);
                 var api = new CleanClientAsync(Environment.GetEnvironmentVariable("DADATA_API_TOKEN"), Environment.GetEnvironmentVariable("DADATA_SECRET"));
                 var phoneResult = await api.Clean<Phone>(Phone);
-                if(phoneResult.qc_conflict == "2" || phoneResult.qc_conflict == "3")
+                if (phoneResult.qc_conflict == "2" || phoneResult.qc_conflict == "3")
                 {
                     logger.LogWarning($"City or region of phone number {phoneResult.source} differ from what user typed in. " +
                         $"City: {phoneResult.city}, region: {phoneResult.region}.");
                 }
-                if(phoneResult.qc == "0" || phoneResult.qc == "7")
+                if (phoneResult.qc == "0" || phoneResult.qc == "7")
                 {
                     logger.LogInformation($"Phone number {Phone} exists and correct.");
                     return Json(true);
@@ -171,9 +173,9 @@ namespace Silerium.Controllers
         [AcceptVerbs("Get", "Post")]
         public async Task<JsonResult> CheckPasswords(string Password, string ConfirmPassword)
         {
-            if(Password == ConfirmPassword) 
+            if (Password == ConfirmPassword)
             {
-                return Json(true); 
+                return Json(true);
             }
             else
             {
@@ -206,96 +208,102 @@ namespace Silerium.Controllers
                 {
                     IUsers users = new UsersRepository(db);
                     User? user = users.GetAllWithInclude(u => u.Orders).Where(u =>
-                        u.Email == userLoginVM.Email &&
-                        u.Password == userLoginVM.Password).FirstOrDefault();
+                        u.Email == userLoginVM.Email).FirstOrDefault();
                     if (user != null)
                     {
-                        SecurityToken jwt;
-                        List<Claim> claims = await DefaultUsers.GenerateClaims(user.Email, users, logger);
-                        if(claims == null)
+                        if (BCrypt.Net.BCrypt.Verify(userLoginVM.Password, user.Password))
                         {
-                            logger.LogWarning("Failed assigning claims to user");
-                            return RedirectToAction("Login", "User");
-                        }
-                        ClaimsIdentity claimsIdentity;
-                        ClaimsPrincipal claimsPrincipal;
-
-                        if (userLoginVM.RememberMe) //Use cookies authentication
-                        {
-                            claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                            claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-
-                            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
-
-                            if (Url.IsLocalUrl(returnUrl))
+                            SecurityToken jwt;
+                            List<Claim> claims = await DefaultUsers.GenerateClaims(user.Email, users, logger);
+                            if (claims == null)
                             {
-                                logger.LogInformation($"User {user.Email} logged in using cookies.");
-                                user.IsOnline = true;
-                                if (!user.IsEmailConfirmed)
+                                logger.LogWarning("Failed assigning claims to user");
+                                return RedirectToAction("Login", "User");
+                            }
+                            ClaimsIdentity claimsIdentity;
+                            ClaimsPrincipal claimsPrincipal;
+
+                            if (userLoginVM.RememberMe) //Use cookies authentication
+                            {
+                                claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                                claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+                                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+
+                                if (Url.IsLocalUrl(returnUrl))
                                 {
-                                    return RedirectToAction("ConfirmEmail", "User");
+                                    logger.LogInformation($"User {user.Email} logged in using cookies.");
+                                    user.IsOnline = true;
+                                    if (!user.IsEmailConfirmed)
+                                    {
+                                        return RedirectToAction("ConfirmEmail", "User", new {userId = user.Id});
+                                    }
+                                    return Redirect(returnUrl ?? "/");
                                 }
-                                return Redirect(returnUrl ?? "/");
+                                else
+                                {
+                                    logger.LogError($"An attempt of Open Redirect attack with {returnUrl} URL adress.");
+                                    return RedirectToAction("Index", "Home");
+                                }
                             }
-                            else
+                            else //Use jwt authentication
                             {
-                                logger.LogError($"An attempt of Open Redirect attack with {returnUrl} URL adress.");
-                                return RedirectToAction("Index", "Home");
+                                claimsIdentity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme);
+                                string? token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                                if (token != null)
+                                    jwt = new JwtSecurityTokenHandler().ReadToken(token);
+                                else
+                                    jwt = new JwtSecurityToken(
+                                    issuer: JWTAuthOptions.ISSUER,
+                                    audience: JWTAuthOptions.AUDIENCE,
+                                    claims: claims,
+                                    expires: DateTime.UtcNow.AddMinutes(1),
+                                    signingCredentials: new SigningCredentials(JWTAuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
+                                    );
+
+                                if (Url.IsLocalUrl(returnUrl))
+                                {
+                                    HttpContext.Session.SetString("access_token", new JwtSecurityTokenHandler().WriteToken(jwt));
+                                    user.IsOnline = true;
+                                    logger.LogInformation($"User {user.Email} logged in using JWT.");
+                                    if (!user.IsEmailConfirmed)
+                                    {
+                                        return RedirectToAction("ConfirmEmail", "User", new {userId = user.Id});
+                                    }
+                                    return Redirect(returnUrl ?? "/");
+                                }
+                                else
+                                {
+                                    logger.LogError($"An attempt of Open Redirect attack with {returnUrl} URL adress.");
+                                    return RedirectToAction("Index", "Home");
+                                }
                             }
                         }
-                        else //Use jwt authentication
+                        else
                         {
-                            claimsIdentity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme);
-                            string? token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-                            if (token != null)
-                                jwt = new JwtSecurityTokenHandler().ReadToken(token);
-                            else
-                                jwt = new JwtSecurityToken(
-                                issuer: JWTAuthOptions.ISSUER,
-                                audience: JWTAuthOptions.AUDIENCE,
-                                claims: claims,
-                                expires: DateTime.UtcNow.AddMinutes(1),
-                                signingCredentials: new SigningCredentials(JWTAuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256)
-                                );
-
-                            if (Url.IsLocalUrl(returnUrl))
+                            if (users.Find(u => u.Password == userLoginVM.Password).Count() == 0)
                             {
-                                HttpContext.Session.SetString("access_token", new JwtSecurityTokenHandler().WriteToken(jwt));
-                                user.IsOnline = true;
-                                logger.LogInformation($"User {user.Email} logged in using JWT.");
-                                if (!user.IsEmailConfirmed)
-                                {
-                                    return RedirectToAction("ConfirmEmail", "User");
-                                }
-                                return Redirect(returnUrl ?? "/");
+                                TempData["Wrong Password"] = "Неверный пароль.";
+                                logger.LogInformation($"User {userLoginVM.Email} typed in wrong password {userLoginVM.Password}.");
+                                return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
+                            }
+                            else if (users.Find(u => u.Email == userLoginVM.Email).Count() == 0)
+                            {
+                                TempData["Wrong Email"] = "Неверный email.";
+                                logger.LogInformation($"User {userLoginVM.Email} typed in wrong or non-existent email.");
+                                return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                             }
                             else
                             {
-                                logger.LogError($"An attempt of Open Redirect attack with {returnUrl} URL adress.");
-                                return RedirectToAction("Index", "Home");
+                                TempData["User not found"] = "Такого профиля не существует. Зарегистрируйтесь и создайте новый.";
+                                logger.LogInformation($"User {userLoginVM.Email} profile is not exists.");
+                                return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
                             }
                         }
                     }
                     else
                     {
-                        if (users.Find(u => u.Password == userLoginVM.Password).Count() == 0)
-                        {
-                            TempData["Wrong Password"] = "Неверный пароль.";
-                            logger.LogInformation($"User {userLoginVM.Email} typed in wrong password {userLoginVM.Password}.");
-                            return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
-                        }
-                        else if (users.Find(u => u.Email == userLoginVM.Email).Count() == 0)
-                        {
-                            TempData["Wrong Email"] = "Неверный email.";
-                            logger.LogInformation($"User {userLoginVM.Email} typed in wrong or non-existent email.");
-                            return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
-                        }
-                        else
-                        {
-                            TempData["User not found"] = "Такого профиля не существует. Зарегистрируйтесь и создайте новый.";
-                            logger.LogInformation($"User {userLoginVM.Email} profile is not exists.");
-                            return RedirectToAction("Login", "User", new { ReturnUrl = returnUrl });
-                        }
+                        return RedirectToAction("Login", "User");
                     }
                 }
             }
@@ -316,9 +324,43 @@ namespace Silerium.Controllers
                 return View(new UserRegisterViewModel { ReturnUrl = returnUrl });
             }
         }
-        public IActionResult ForgotPassword()
+        public IActionResult ForgotPassword(string? email, bool? c)
         {
-            return View(new ForgotPasswordViewModel());
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                if (email != null)
+                {
+                    IUsers users = new UsersRepository(db);
+                    User user = users.Find(u => u.Email == email).FirstOrDefault();
+
+                    if (user.IsEmailConfirmed)
+                    {
+                        return View(new ForgotPasswordViewModel { Email = email});
+                    }
+                    else
+                    {
+                        return RedirectToAction("ConfirmEmail", "User", "/User/ForgotPassword?c=true");
+                    }
+                }
+                else if(c != null)
+                {
+                    return View(new ForgotPasswordViewModel { CodeConfirm = (bool)c });
+                }
+                else
+                    return View(new ForgotPasswordViewModel());
+            }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SendPasswordEmail()
+        {
+            Random rnd = new Random(532);
+            int code = rnd.Next(10000, 99999);
+            HttpContext.Session.SetString("recovery_code", BCrypt.Net.BCrypt.HashPassword(code.ToString(), workFactor: 8));
+            SendEmailService.SendEmailAsync(User.FindFirst("Name").Value, "Восстановление пароля",
+                "ЕСЛИ ВЫ НЕ ЗАПРАШИВАЛИ ВОССТАНОВЛЕНИЕ ПАРОЛЯ ПРОИГНОРИРУЙТЕ ЭТО СООБЩЕНИЕ." +
+                "\nДля восстановления пароля введите следующий код: {code} <a href=\"https://localhost:7032/ForgotPassword?c=true\">на странице</a>.").Wait();
+            return RedirectToAction("ForgotPassword", "User");
         }
         [HttpPost]
         public IActionResult ForgotPasswordPost(ForgotPasswordViewModel forgotPasswordViewModel)
@@ -327,18 +369,26 @@ namespace Silerium.Controllers
                 return RedirectToAction("ForgotPassword", "User");
             else
             {
+                if(forgotPasswordViewModel.Password == null && forgotPasswordViewModel.ConfirmPassword == null)
+                {
+                    return RedirectToAction("ForgotPassword", "User", new {email = forgotPasswordViewModel.Email});
+                }
                 if (ModelState.IsValid)
                 {
                     using (var db = new ApplicationDbContext(connectionString))
                     {
                         IUsers users = new UsersRepository(db);
                         User? user = users.Find(u => u.Email == forgotPasswordViewModel.Email).FirstOrDefault();
-                        if (user != null)
+                        if(BCrypt.Net.BCrypt.Verify(forgotPasswordViewModel.Code.ToString(), HttpContext.Session.GetString("recovery_code")))
                         {
                             user.Password = forgotPasswordViewModel.Password;
                             users.Save();
                             logger.LogInformation($"User {user.Email} changed his password.");
                             return RedirectToAction("Profile", "User");
+                        }
+                        if (user != null)
+                        {
+                            return RedirectToAction("ForgotPassword", "User", new { c = true });
                         }
                         else
                         {
@@ -354,34 +404,79 @@ namespace Silerium.Controllers
                 }
             }
         }
+        public string GenerateEmailConfirmationToken(int size)
+        {
+            Random random = new Random();
+            string letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ1234567890";
+            string token = string.Empty;
+            for (int i = 0; i < size; i++)
+            {
+                token += letters[random.Next(0, letters.Length - 1)];
+            }
+            return token;
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult SendConfirmationEmail(bool sent, bool onLoad)
+        public IActionResult SendConfirmationEmail(string email, bool sent, bool onLoad, string? returnUrl)
         {
-            string token = Guid.NewGuid().ToString();
-            HttpContext.Session.SetString("email_token", token);
-            SendEmailService.SendEmailAsync(User.FindFirst("Name").Value, "Подтверждение email",
-                $"Перейдите по следующей <a href=\"https://silerium.com/User/ConfirmEmail?t={token}\">ссылке</a>" +
-                $" для подтверждения вашего email.").Wait();
-            return RedirectToAction("ConfirmEmail", "User", new {sent, onLoad});
+            using (var db = new ApplicationDbContext(connectionString))
+            {
+                IUsers users = new UsersRepository(db);
+                User user = users.Find(u => u.Email == email).FirstOrDefault();
+
+                string token = GenerateEmailConfirmationToken(15);
+                HttpContext.Session.SetString("email_token", token);
+
+                string returnUrlStr = "&returnUrl=" + returnUrl ?? "";
+
+                SendEmailService.SendEmailAsync(User.FindFirst("Name").Value, "Подтверждение email",
+                    $"Перейдите по следующей <a href=\"https://localhost:7032/User/EmailConfirmed?t={token}&userId={user.Id}{returnUrlStr}\">ссылке</a>" +
+                    $" для подтверждения вашего email.").Wait();
+
+                return RedirectToAction("ConfirmEmail", "User", new { sent, onLoad, returnUrl });
+            }
         }
-        public IActionResult ConfirmEmail(bool sent, bool onLoad)
+        public IActionResult ConfirmEmail(int? userId, bool sent, bool onLoad, string? returnUrl)
         {
-            return View(new ConfirmationEmailViewModel { EmailAlreadySent = sent, EmailSentOnLoad = onLoad});
+            using var db = new ApplicationDbContext(connectionString);
+            if (userId != null)
+            {
+                IUsers users = new UsersRepository(db);
+                string userEmail = users.GetByID((int)userId - 1).Email;
+                return View(new ConfirmationEmailViewModel { Email = userEmail, EmailAlreadySent = sent, EmailSentOnLoad = onLoad, ReturnUrl = returnUrl });
+            }
+            else
+            {
+                return View(new ConfirmationEmailViewModel { EmailAlreadySent = sent, EmailSentOnLoad = onLoad, ReturnUrl = returnUrl });
+            }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
-        public IActionResult EmailConfirmed(string t)
+        public IActionResult EmailConfirmed(int userId, string t, string? returnUrl)
         {
-            if(t == HttpContext.Session.GetString("email_token"))
+            if (t == HttpContext.Session.GetString("email_token"))
             {
                 HttpContext.Session.Remove("email_token");
-                logger.LogInformation($"User {User.FindFirst("Name")} confirmed his email.");
-                return View();
+
+                using (var db = new ApplicationDbContext(connectionString))
+                {
+                    IUsers users = new UsersRepository(db);
+
+                    User user = users.GetByID(userId-1);
+                    user.IsEmailConfirmed = true;
+
+                    logger.LogInformation($"User {User.FindFirst("Name")} confirmed their email.");
+                    TempData["success"] = "Email подтвержден";
+
+                    if (returnUrl != null)
+                        return LocalRedirect(returnUrl);
+                    else
+                        return View();
+                }
             }
             else
             {
                 HttpContext.Session.Remove("email_token");
-                logger.LogInformation($"User {User.FindFirst("Name")} failed to confirm his email. Received token: {t}.\n" +
+                logger.LogInformation($"User {User.FindFirst("Name")} failed to confirm their email. Received token: {t}.\n" +
                     $"Session token: {HttpContext.Session.GetString("email_token")}.");
                 return RedirectToAction("Login", "User");
             }
@@ -401,14 +496,14 @@ namespace Silerium.Controllers
                     var apilocation = await api.Iplocate(Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString());
                     if (!Request.Cookies.Any(c => c.Key == "UserCity"))
                     {
-                        if(apilocation.location != null)
+                        if (apilocation.location != null)
                             Response.Cookies.Append("UserCity", apilocation.location.value, new CookieOptions { Expires = DateTime.Now.AddHours(24) });
                     }
                     User user = new User
                     {
                         Name = userRegisterVM.Name,
                         Surname = userRegisterVM.Surname,
-                        Password = userRegisterVM.Password,
+                        Password = BCrypt.Net.BCrypt.HashPassword(userRegisterVM.Password, workFactor: 12),
                         Email = userRegisterVM.Email,
                         BirthDate = userRegisterVM.BirthDate,
                         Country = userRegisterVM.Country,
@@ -437,7 +532,7 @@ namespace Silerium.Controllers
                     users.Add(user);
                     users.Save();
                     logger.LogInformation($"User {user.Email} registered.");
-                    return RedirectToAction("Login", "User", new {returnUrl});
+                    return RedirectToAction("Login", "User", new { returnUrl });
                 }
             }
             else
@@ -456,12 +551,12 @@ namespace Silerium.Controllers
         {
             //using (var db = new ApplicationDbContext(connectionString))
             //{
-                //IUsers users = new UsersRepository(db);
-                HttpContext.Session.Remove("access_token");
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                logger.LogInformation($"User logged out");
-                //users.Find(u => u.Email == HttpContext.User.Identity.Name).FirstOrDefault().IsOnline = false;
-                return RedirectToAction("Index", "Home");
+            //IUsers users = new UsersRepository(db);
+            HttpContext.Session.Remove("access_token");
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            logger.LogInformation($"User logged out");
+            //users.Find(u => u.Email == HttpContext.User.Identity.Name).FirstOrDefault().IsOnline = false;
+            return RedirectToAction("Index", "Home");
             //}
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]

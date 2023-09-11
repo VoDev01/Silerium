@@ -7,7 +7,7 @@ using Microsoft.Data.SqlClient;
 namespace Silerium.Middlewares
 {
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
-    public class HandleDuplicateRequestsMiddleware
+    /*public class HandleDuplicateRequestsMiddleware
     {
         private readonly string key;
         private readonly string alertTempDataKey;
@@ -60,5 +60,5 @@ namespace Silerium.Middlewares
         {
             return builder.UseMiddleware<HandleDuplicateRequestsMiddleware>();
         }
-    }
+    }*/
 }

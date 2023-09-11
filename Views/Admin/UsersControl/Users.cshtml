@@ -3,7 +3,7 @@
     ViewData["Title"] = "Пользователи";
     Layout = "_AdminPanelLayout";
 }
-<div class="mx-3">
+<div class="mx-3" style="max-width: 900px; overflow-x: scroll;">
     <form style="width: 200px; margin-bottom: 15px;" asp-action="SearchUsers" asp-controller="Admin">
         <label class="form-label" for="searchUsers">Поиск</label>
         <input type="search" class="form-control" name="searchUsers" id="searchUsers" />
@@ -18,10 +18,10 @@
                     @Html.DisplayName("Фамилия")
                 </th>
                 <th>
-                    @Html.DisplayName("Пароль")
+                    @Html.DisplayName("Email")
                 </th>
                 <th>
-                    @Html.DisplayName("Email")
+                    @Html.DisplayName("Пароль")
                 </th>
                 <th>
                     @Html.DisplayName("День рождения")
@@ -54,10 +54,10 @@
                         @user.Surname
                     </td>
                     <td>
-                        @user.Password
+                        @user.Email
                     </td>
                     <td>
-                        @user.Email
+                        @user.Password
                     </td>
                     <td>
                         @if (user.BirthDate != null)

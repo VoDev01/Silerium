@@ -34,7 +34,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("RoleUser", (string)null);
+                    b.ToTable("RoleUser");
                 });
 
             modelBuilder.Entity("Silerium.Models.Category", b =>
@@ -59,7 +59,7 @@ namespace Silerium.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("Silerium.Models.Order", b =>
@@ -112,7 +112,7 @@ namespace Silerium.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Pages", (string)null);
+                    b.ToTable("Pages");
                 });
 
             modelBuilder.Entity("Silerium.Models.Permission", b =>
@@ -129,7 +129,7 @@ namespace Silerium.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Permissions", (string)null);
+                    b.ToTable("Permissions");
 
                     b.HasData(
                         new
@@ -347,7 +347,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("SubcategoryId");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("Silerium.Models.ProductImage", b =>
@@ -369,7 +369,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImages", (string)null);
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("Silerium.Models.ProductSpecification", b =>
@@ -397,7 +397,27 @@ namespace Silerium.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductSpecification", (string)null);
+                    b.ToTable("ProductSpecification");
+                });
+
+            modelBuilder.Entity("Silerium.Models.Request", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("IdempotentToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotentToken")
+                        .IsUnique();
+
+                    b.ToTable("Requests");
                 });
 
             modelBuilder.Entity("Silerium.Models.Role", b =>
@@ -410,11 +430,12 @@ namespace Silerium.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
 
                     b.HasData(
                         new
@@ -736,7 +757,7 @@ namespace Silerium.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Subcategories", (string)null);
+                    b.ToTable("Subcategories");
                 });
 
             modelBuilder.Entity("Silerium.Models.User", b =>
@@ -781,8 +802,8 @@ namespace Silerium.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Phone")
                         .HasMaxLength(20)
@@ -798,7 +819,7 @@ namespace Silerium.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("RoleUser", b =>

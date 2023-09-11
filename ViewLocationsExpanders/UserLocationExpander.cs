@@ -8,7 +8,7 @@ namespace Silerium.ViewLocationsExpanders
         {
             List<string> locations = new List<string>
             {
-                "~/Views/User/Authentication/{0}.cshtml"
+                "~/Views/User/Auth/{0}.cshtml"
             };
             locations.AddRange(viewLocations);
             return locations;
