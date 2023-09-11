@@ -24,6 +24,7 @@ namespace Silerium.Data
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Page> Pages { get; set; }
+        public DbSet<Request> Requests { get; set; }
 
         private IEntityTypeConfiguration<Product> productConfiguration = new ProductConfiguration();
         private IEntityTypeConfiguration<Role> roleConfiguration = new RoleConfiguration();

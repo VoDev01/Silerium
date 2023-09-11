@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
-using Silerium.Services;
+using Silerium.Services.RolesSerivces;
 using System.Security.Claims;
 
 namespace Silerium.Data.Seeds

@@ -1,6 +1,6 @@
 ﻿using Silerium.Models;
 
-namespace Silerium.Services
+namespace Silerium.Services.PaginationServices
 {
     public class ModelPaginationService
     {
@@ -28,7 +28,7 @@ namespace Silerium.Services
         }
         public static bool ItemOnPage(PaginationModel paginationModel, int itemIndex)
         {
-            return itemIndex >= (paginationModel.CurrentPage - 1) * PaginationModel.MaxItemsAtPage 
+            return itemIndex >= (paginationModel.CurrentPage - 1) * PaginationModel.MaxItemsAtPage
                 && itemIndex < paginationModel.CurrentPage * PaginationModel.MaxItemsAtPage;
         }
     }

@@ -1,0 +1,12 @@
+﻿@{
+    ViewData["Title"] = "Email подтвержден";
+}
+<div class="container" style="width: 550px;">
+    <h1>Email подтвержден</h1>
+    <p>Вы будете перенаправлены в ваш личный кабинет через 5 сек. Если этого не произошло то перейдите в личный кабинет в ручную.</p>
+    <script type="text/javascript">
+        setTimeout(function () {
+            window.location.href = "\User\Profile";
+        }, 5000);
+    </script>
+</div>

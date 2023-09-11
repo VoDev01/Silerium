@@ -31,9 +31,15 @@
         {
             <span class="text-danger mb-3">@TempData["User not found"]</span>
         }
-        <div class="mb-3">
-            <label asp-for="RememberMe" class="form-label">Запомнить</label>
-            <input type="checkbox" class="form-check" asp-for="RememberMe" />
+        <div class="mb-3 row">
+            <div class="col-6">
+                <label asp-for="RememberMe" class="form-label">Запомнить</label>
+                <input type="checkbox" class="form-check" asp-for="RememberMe" />
+            </div>
+            <div class="col-6">
+                <a class="d-block h-100 w-100 text-secondary text-decoration-underline text-end" style="padding-top: 3px; font-size: 15px;" 
+                asp-action="ForgotPassword" asp-controller="User">Забыли пароль?</a>
+            </div>
         </div>
 
         <input hidden name="returnUrl" value="@Model.ReturnUrl" />

@@ -15,6 +15,7 @@ namespace Silerium.ViewModels.AuthModels
         [Remote("CheckEmail", "User", ErrorMessage = "Данный email уже кем-то используется.")]
         public string Email { get; set; }
         [MaxLength(50)]
+        [MinLength(12, ErrorMessage = "Пароль должен содержать как минимум 12 символов.")]
         [Required(ErrorMessage = "Введите пароль.")]
         public string Password { get; set; }
         [MaxLength(50)]

@@ -7,7 +7,8 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "SILERIUM_JWT": "silerium_jwt_secret_auth",
         "DADATA_API_TOKEN": "52f63369b7beca94ec39a14e99de526b037091ca",
-        "DADATA_SECRET": "4f804c8d02c4711f213323e403bd2dbfcc6fd189"
+        "DADATA_SECRET": "4f804c8d02c4711f213323e403bd2dbfcc6fd189",
+        "EMAIL_PASSWORD": "cayxzpxpzfekoomd"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7032;http://localhost:5259"

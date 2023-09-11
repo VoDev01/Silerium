@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Security.Claims;
 
-namespace Silerium.Services
+namespace Silerium.Services.RolesSerivces
 {
     public enum PermissionType { View, Edit, Create, Delete, DownloadData }
     public class RolesManagerService
@@ -24,17 +24,17 @@ namespace Silerium.Services
         }
         public static void GetPermissions(List<RoleClaimViewModel> roleClaimVM, Type policy)
         {
-            FieldInfo[] fields = policy.GetFields(BindingFlags.Static| BindingFlags.Public);
-            foreach(var fieldInfo in fields) 
+            FieldInfo[] fields = policy.GetFields(BindingFlags.Static | BindingFlags.Public);
+            foreach (var fieldInfo in fields)
             {
                 roleClaimVM.Add(new RoleClaimViewModel { Value = fieldInfo.GetValue(null).ToString(), Type = "Permission" });
             }
         }
-        
+
         public static async Task AddPermissionClaim(ClaimsIdentity user, string permission)
         {
             var userClaims = user.Claims;
-            if(!userClaims.Any(u => u.Type == "Permission" && u.Value == permission))
+            if (!userClaims.Any(u => u.Type == "Permission" && u.Value == permission))
             {
                 user.AddClaim(new Claim("Permission", permission));
             }

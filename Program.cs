@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authorization;
 using Silerium.PermissionAuth;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Silerium.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<RazorViewEngineOptions>(options =>
 {
     options.ViewLocationExpanders.Add(new Silerium.ViewLocationsExpanders.AdminLocationExpander());
+    options.ViewLocationExpanders.Add(new Silerium.ViewLocationsExpanders.UserLocationExpander());
 });
 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
@@ -81,8 +83,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+//app.UseHandleDuplicateRequestsMiddleware();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.UseHttpLogging();
 
 app.Run();

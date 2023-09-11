@@ -16,6 +16,7 @@ namespace SileriumDirectory.Controllers
         }
         public IActionResult Index()
         {
+            _logger.LogInformation("Home page loaded.");
             return View();
         }
 

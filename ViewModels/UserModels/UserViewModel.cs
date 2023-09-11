@@ -1,6 +1,6 @@
 ﻿using Silerium.Models;
 
-namespace Silerium.ViewModels
+namespace Silerium.ViewModels.UserModels
 {
     public class UserViewModel
     {

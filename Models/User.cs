@@ -13,6 +13,7 @@ namespace Silerium.Models
         public string? Surname { get; set; }
         [MaxLength(75)]
         public string Email { get; set; }
+        public bool IsEmailConfirmed { get; set; }
         [MaxLength(50)]
         public string Password { get; set; }
         public DateTime? BirthDate { get; set; }

@@ -8,7 +8,6 @@ using Silerium.Data;
 using Silerium.Models;
 using Silerium.Models.Interfaces;
 using Silerium.Models.Repositories;
-using Silerium.ViewModels;
 using Silerium.ViewModels.AuthModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -16,6 +15,9 @@ using Microsoft.IdentityModel.Tokens;
 using Dadata;
 using Dadata.Model;
 using Silerium.Data.Seeds;
+using Silerium.ViewModels.UserModels;
+using Silerium.Services.EmailServices;
+using Silerium.ViewModels.AuthenticationModels;
 
 namespace Silerium.Controllers
 {
@@ -229,6 +231,10 @@ namespace Silerium.Controllers
                             {
                                 logger.LogInformation($"User {user.Email} logged in using cookies.");
                                 user.IsOnline = true;
+                                if (!user.IsEmailConfirmed)
+                                {
+                                    return RedirectToAction("ConfirmEmail", "User");
+                                }
                                 return Redirect(returnUrl ?? "/");
                             }
                             else
@@ -257,6 +263,10 @@ namespace Silerium.Controllers
                                 HttpContext.Session.SetString("access_token", new JwtSecurityTokenHandler().WriteToken(jwt));
                                 user.IsOnline = true;
                                 logger.LogInformation($"User {user.Email} logged in using JWT.");
+                                if (!user.IsEmailConfirmed)
+                                {
+                                    return RedirectToAction("ConfirmEmail", "User");
+                                }
                                 return Redirect(returnUrl ?? "/");
                             }
                             else
@@ -306,7 +316,76 @@ namespace Silerium.Controllers
                 return View(new UserRegisterViewModel { ReturnUrl = returnUrl });
             }
         }
-
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordViewModel());
+        }
+        [HttpPost]
+        public IActionResult ForgotPasswordPost(ForgotPasswordViewModel forgotPasswordViewModel)
+        {
+            if (forgotPasswordViewModel.Email == null)
+                return RedirectToAction("ForgotPassword", "User");
+            else
+            {
+                if (ModelState.IsValid)
+                {
+                    using (var db = new ApplicationDbContext(connectionString))
+                    {
+                        IUsers users = new UsersRepository(db);
+                        User? user = users.Find(u => u.Email == forgotPasswordViewModel.Email).FirstOrDefault();
+                        if (user != null)
+                        {
+                            user.Password = forgotPasswordViewModel.Password;
+                            users.Save();
+                            logger.LogInformation($"User {user.Email} changed his password.");
+                            return RedirectToAction("Profile", "User");
+                        }
+                        else
+                        {
+                            TempData["warning"] = "Вы ввели email не пренадлежащий вам.";
+                            logger.LogInformation($"User {user.Email} typed in wrong email.");
+                            return RedirectToAction("ForgotPassword", "User");
+                        }
+                    }
+                }
+                else
+                {
+                    return View(new ForgotPasswordViewModel());
+                }
+            }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SendConfirmationEmail(bool sent, bool onLoad)
+        {
+            string token = Guid.NewGuid().ToString();
+            HttpContext.Session.SetString("email_token", token);
+            SendEmailService.SendEmailAsync(User.FindFirst("Name").Value, "Подтверждение email",
+                $"Перейдите по следующей <a href=\"https://silerium.com/User/ConfirmEmail?t={token}\">ссылке</a>" +
+                $" для подтверждения вашего email.").Wait();
+            return RedirectToAction("ConfirmEmail", "User", new {sent, onLoad});
+        }
+        public IActionResult ConfirmEmail(bool sent, bool onLoad)
+        {
+            return View(new ConfirmationEmailViewModel { EmailAlreadySent = sent, EmailSentOnLoad = onLoad});
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ", " + CookieAuthenticationDefaults.AuthenticationScheme)]
+        public IActionResult EmailConfirmed(string t)
+        {
+            if(t == HttpContext.Session.GetString("email_token"))
+            {
+                HttpContext.Session.Remove("email_token");
+                logger.LogInformation($"User {User.FindFirst("Name")} confirmed his email.");
+                return View();
+            }
+            else
+            {
+                HttpContext.Session.Remove("email_token");
+                logger.LogInformation($"User {User.FindFirst("Name")} failed to confirm his email. Received token: {t}.\n" +
+                    $"Session token: {HttpContext.Session.GetString("email_token")}.");
+                return RedirectToAction("Login", "User");
+            }
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("User/Register")]
@@ -317,12 +396,13 @@ namespace Silerium.Controllers
                 using (var db = new ApplicationDbContext(connectionString))
                 {
                     IUsers users = new UsersRepository(db);
+                    IRoles roles = new RolesRepository(db);
                     var api = new SuggestClientAsync(Environment.GetEnvironmentVariable("DADATA_API_TOKEN"));
-                    var apiResult = await api.Iplocate(Request.HttpContext.Connection.RemoteIpAddress.ToString());
+                    var apilocation = await api.Iplocate(Request.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString());
                     if (!Request.Cookies.Any(c => c.Key == "UserCity"))
                     {
-                        if(apiResult.location != null)
-                            Response.Cookies.Append("UserCity", apiResult.location.value, new CookieOptions { Expires = DateTime.Now.AddHours(24) });
+                        if(apilocation.location != null)
+                            Response.Cookies.Append("UserCity", apilocation.location.value, new CookieOptions { Expires = DateTime.Now.AddHours(24) });
                     }
                     User user = new User
                     {
@@ -334,9 +414,10 @@ namespace Silerium.Controllers
                         Country = userRegisterVM.Country,
                         Phone = userRegisterVM.Phone,
                         HomeAdress = userRegisterVM.HomeAdress,
-                        City = apiResult.location?.value,
-                        Roles = new List<Role> { DefaultUsers.SeedUserRole() }
+                        City = apilocation.location?.value,
+                        IsEmailConfirmed = false
                     };
+                    roles.GetAllWithInclude(r => r.Users).Where(r => r.Name == "User").FirstOrDefault().Users.Add(user);
 
                     byte[] imageData;
                     if (userRegisterVM.PfpFile != null)
@@ -356,7 +437,7 @@ namespace Silerium.Controllers
                     users.Add(user);
                     users.Save();
                     logger.LogInformation($"User {user.Email} registered.");
-                    return RedirectToAction("Login", "User", new { returnUrl });
+                    return RedirectToAction("Login", "User", new {returnUrl});
                 }
             }
             else
@@ -430,7 +511,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IOrders orders = new OrdersRepository(db);
-                Order order = orders.FindSetByCondition(o => o.OrderId.ToString() == id).FirstOrDefault();
+                Order order = orders.Find(o => o.OrderId.ToString() == id).FirstOrDefault();
                 order.TotalPrice *= amount;
                 order.OrderAmount = amount;
                 orders.Save();
@@ -443,7 +524,7 @@ namespace Silerium.Controllers
             using (var db = new ApplicationDbContext(connectionString))
             {
                 IOrders orders = new OrdersRepository(db);
-                orders.Delete(orders.FindSetByCondition(o => o.OrderId == new Guid(id)).FirstOrDefault());
+                orders.Remove(orders.Find(o => o.OrderId == new Guid(id)).FirstOrDefault());
                 orders.Save();
                 return RedirectToAction("ShopCart", "User");
             }
