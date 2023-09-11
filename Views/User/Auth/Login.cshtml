@@ -1,0 +1,55 @@
+﻿@model Silerium.ViewModels.AuthModels.UserLoginViewModel
+@{
+    ViewData["title"] = "Вход в профиль";
+}
+
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+<h2 class="text-center">Вход</h2>
+<div class="container" style="width: 500px;">
+    <form asp-action="Login" asp-controller="User">
+        <div class="mb-3">
+            <label class="form-label" asp-for="Email">Email</label>
+            <input class="form-control" type="email" asp-for="Email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        @if (TempData["Wrong Email"] != null)
+        {
+            <li class="text-danger mb-3">@TempData["Wrong Email"]</li>
+        }
+        <div class="mb-3">
+            <label class="form-label" asp-for="Password">Пароль</label>
+            <input class="form-control" type="password" asp-for="Password" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+        @if (TempData["Wrong Password"] != null)
+        {
+            <span class="text-danger mb-3">@TempData["Wrong Password"]</span>
+        }
+        else if (TempData["User not found"] != null)
+        {
+            <span class="text-danger mb-3">@TempData["User not found"]</span>
+        }
+        <div class="mb-3 row">
+            <div class="col-6">
+                <label asp-for="RememberMe" class="form-label">Запомнить</label>
+                <input type="checkbox" class="form-check" asp-for="RememberMe" />
+            </div>
+            <div class="col-6">
+                <a class="d-block h-100 w-100 text-secondary text-decoration-underline text-end" style="padding-top: 3px; font-size: 15px;" 
+                asp-action="ForgotPassword" asp-controller="User">Забыли пароль?</a>
+            </div>
+        </div>
+
+        <input hidden name="returnUrl" value="@Model.ReturnUrl" />
+
+        <div class="row mb-3 justify-content-center">
+            <a class="btn btn-outline-secondary text-decoration-none col-4" asp-action="Register" asp-controller="User" asp-route-returnUrl="@Model.ReturnUrl">
+                Зарегистрироваться
+            </a>
+            <div class="col-2"></div>
+            <button class="btn btn-outline-primary col-4" type="submit">Войти</button>
+        </div>
+    </form>
+</div>

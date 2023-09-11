@@ -1,0 +1,56 @@
+﻿@model Silerium.ViewModels.UserModels.ConfirmationEmailViewModel
+@{
+    Layout = "_ConfirmEmailLayout";
+    ViewData["Title"] = "Потдверждение email";
+}
+<div class="container" style="width: 550px;">
+    <h1>Подтвердите email адрес</h1>
+    <p>На вашу почту была выслана ссылка. Перейдите по ссылке для подтверждения своей почты.</p>
+    <form asp-action="SendConfirmationEmail" asp-controller="User" name="send_email_form">
+        <input hidden name="email" value="@Model.Email"/>
+        <input hidden name="onLoad" value="true" />
+        <input hidden name="returnUrl" value="@Model.ReturnUrl" />
+        @if (!Model.EmailAlreadySent && !Model.EmailSentOnLoad)
+        {
+            <input name="sent" id="sent" hidden value="false" />
+            <button type="submit" class="btn btn-primary" id="send_email_btn">Отправить повторно</button>
+        }
+        else if (!Model.EmailAlreadySent && Model.EmailSentOnLoad)
+        {
+            <input name="sent" id="sent" hidden value="true" />
+            <button type="submit" class="btn btn-primary" id="send_email_btn">Отправить повторно</button>
+        }
+        else if (Model.EmailAlreadySent && Model.EmailSentOnLoad)
+        {
+            <p class="text-secondary text-decoration-underline" id="timer">Можно будет отправить повторно через 60 секунд.</p>
+            <input name="sent" id="sent" hidden value="false" />
+            <button type="submit" class="btn btn-primary" id="send_email_btn" disabled>Отправить повторно</button>
+        }
+    </form>
+</div>
+@section Scripts{
+    @if (!Model.EmailSentOnLoad)
+    {
+        <script>
+            window.onload = function () {
+                document.forms['send_email_form'].submit();
+            }
+        </script>
+    }
+    <script>
+        var countTime = 61;
+        var countdownFunc = setInterval(function () {
+            countTime--;
+            $('#timer').text("Можно будет отправить повторно через " + countTime + " секунд.");
+            if (countTime <= 0) {
+                clearInterval(countdownFunc);
+                $('#send_email_btn').prop("disabled", false);
+                $('#timer').prop("hidden", true);
+                $('#sent').val(true);
+            }
+            else {
+                console.log(countTime);
+            }
+        }, 1000);
+    </script>
+}
